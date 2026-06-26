@@ -573,6 +573,48 @@ textarea {
   background: #eaf7f4;
 }
 
+.member-row {
+  align-items: stretch;
+  padding: 6px;
+}
+
+.member-select-button {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.member-select-button.is-active {
+  background: #eaf7f4;
+}
+
+.kick-button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #f0c6c6;
+  border-radius: 7px;
+  color: #a83232;
+  background: #fff4f4;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.kick-button:hover {
+  border-color: #df8f8f;
+  background: #ffe8e8;
+}
+
 .member-item strong {
   min-width: 0;
   overflow-wrap: anywhere;

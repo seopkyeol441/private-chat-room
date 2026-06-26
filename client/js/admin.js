@@ -62,6 +62,10 @@
     return profile?.nickname || profile?.username || "알 수 없음";
   }
 
+  function getMemberName(member) {
+    return getProfileName(member.user_id);
+  }
+
   function isOnline(userId) {
     return onlineUserIds.has(userId);
   }
@@ -214,13 +218,16 @@
     memberList.innerHTML = "";
 
     participants.forEach((member) => {
+      const item = document.createElement("div");
+      item.className = "member-item member-row";
+
       const button = document.createElement("button");
-      button.className = "member-item member-button";
+      button.className = "member-select-button";
       button.type = "button";
       button.dataset.userId = member.user_id;
 
       const name = document.createElement("strong");
-      name.textContent = getProfileName(member.user_id);
+      name.textContent = getMemberName(member);
 
       const role = document.createElement("span");
       role.className = isOnline(member.user_id)
@@ -233,14 +240,22 @@
       button.append(name, role);
       button.classList.toggle("is-active", member.user_id === selectedUserId);
       button.addEventListener("click", () => selectParticipant(member.user_id));
-      memberList.append(button);
+
+      const kickButton = document.createElement("button");
+      kickButton.className = "kick-button";
+      kickButton.type = "button";
+      kickButton.textContent = "추방";
+      kickButton.addEventListener("click", () => kickParticipant(member));
+
+      item.append(button, kickButton);
+      memberList.append(item);
     });
 
     updateSelectedParticipant();
   }
 
   function updateSelectedParticipant() {
-    memberList.querySelectorAll(".member-button").forEach((button) => {
+    memberList.querySelectorAll(".member-select-button").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.userId === selectedUserId);
     });
 
@@ -252,6 +267,53 @@
     selectedUserId = userId;
     updateSelectedParticipant();
     loadPrivateMessages();
+  }
+
+  async function kickParticipant(member) {
+    clearMessage();
+
+    if (!member || member.role === "admin") {
+      showMessage("관리자는 추방할 수 없습니다.");
+      return;
+    }
+
+    const memberName = getMemberName(member);
+    const ok = window.confirm(`${memberName}님을 이 방에서 추방할까요?`);
+
+    if (!ok) return;
+
+    const { error: messageError } = await supabaseClient.from("messages").insert({
+      room_id: roomId,
+      sender_id: currentUser.id,
+      receiver_id: null,
+      message_type: "global",
+      content: `${memberName}님이 관리자에 의해 추방되었습니다.`,
+    });
+
+    if (messageError) {
+      showMessage(getFriendlyError(messageError));
+      return;
+    }
+
+    const { error: deleteError } = await supabaseClient
+      .from("room_members")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("user_id", member.user_id)
+      .eq("role", "player");
+
+    if (deleteError) {
+      showMessage(getFriendlyError(deleteError));
+      return;
+    }
+
+    if (selectedUserId === member.user_id) {
+      selectedUserId = null;
+    }
+
+    showMessage(`${memberName}님을 추방했습니다.`, "success");
+    await loadMembers();
+    await loadPrivateMessages();
   }
 
   function createMessageElement(message) {

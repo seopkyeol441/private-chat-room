@@ -234,6 +234,21 @@
     }
 
     roomMembers = data || [];
+
+    const isStillMember = roomMembers.some((member) => member.user_id === currentUser.id);
+
+    // 관리자가 현재 사용자를 추방하면 room_members에서 행이 삭제됩니다.
+    // Realtime으로 그 변화를 감지한 뒤 안내 메시지를 보여주고 로비로 이동시킵니다.
+    if (currentMember && !isStillMember) {
+      currentMember = null;
+      await loadGlobalMessages();
+      showMessage("관리자에 의해 방에서 추방되었습니다. 잠시 후 로비로 이동합니다.");
+      globalMessageForm.classList.add("is-disabled");
+      privateMessageForm.classList.add("is-disabled");
+      window.setTimeout(moveToLobby, 1800);
+      return false;
+    }
+
     await loadProfiles(roomMembers.map((member) => member.user_id));
     renderMemberList();
     renderPrivateChatSelector();
