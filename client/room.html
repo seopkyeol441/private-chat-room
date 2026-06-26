@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private Chat Room | Room</title>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <main class="room-page">
+      <header class="room-header">
+        <div class="room-title-area">
+          <div>
+            <p class="auth-kicker">Private Chat Room</p>
+            <h1 id="room-title">방</h1>
+            <p class="room-meta">코드 <span id="room-code">------</span></p>
+          </div>
+
+          <section class="header-member-panel" aria-labelledby="member-title">
+            <h2 id="member-title">참가자</h2>
+            <div class="member-list header-member-list" id="member-list">
+              <p class="empty-state">참가자를 불러오는 중입니다.</p>
+            </div>
+          </section>
+        </div>
+
+        <div class="room-actions">
+          <button
+            class="primary-button admin-page-button is-hidden"
+            id="admin-page-button"
+            type="button"
+          >
+            관리자 페이지
+          </button>
+          <button class="secondary-button" id="toggle-note-button" type="button">
+            메모장
+          </button>
+          <button class="secondary-button" id="leave-room-button" type="button">
+            방 나가기
+          </button>
+
+          <section class="room-panel note-popover is-hidden" id="note-body" aria-labelledby="note-title">
+            <div class="panel-header note-window-header" id="note-window-header">
+              <div>
+                <h2 id="note-title">개인 메모장</h2>
+                <p>이 방에서 나만 볼 수 있는 메모입니다.</p>
+              </div>
+              <button class="ghost-button note-close-button" id="close-note-button" type="button">
+                닫기
+              </button>
+            </div>
+
+            <textarea
+              class="note-textarea"
+              id="private-note"
+              placeholder="메모를 입력하세요."
+              rows="12"
+            ></textarea>
+
+            <button class="primary-button" id="save-note-button" type="button">
+              메모 저장
+            </button>
+            <span class="note-resize-handle" id="note-resize-handle" aria-hidden="true"></span>
+          </section>
+        </div>
+      </header>
+
+      <p class="auth-message room-message" id="room-message" aria-live="polite"></p>
+
+      <section class="room-layout" aria-label="채팅방">
+        <section class="room-panel chat-panel" aria-labelledby="global-chat-title">
+          <div class="panel-header">
+            <div>
+              <h2 id="global-chat-title">전체 채팅</h2>
+              <p>방에 있는 모든 사람에게 보입니다.</p>
+            </div>
+          </div>
+
+          <div class="message-list" id="global-message-list">
+            <p class="empty-state">메시지를 불러오는 중입니다.</p>
+          </div>
+
+          <form class="message-form" id="global-message-form">
+            <input
+              type="text"
+              name="content"
+              placeholder="전체 메시지 입력"
+              maxlength="500"
+              required
+            />
+            <button class="primary-button" type="submit">전송</button>
+          </form>
+        </section>
+
+        <section class="room-panel private-panel" aria-labelledby="private-chat-title">
+          <div class="panel-header">
+            <div>
+              <h2 id="private-chat-title">개인 채팅</h2>
+              <p id="private-chat-description">상대방을 불러오는 중입니다.</p>
+            </div>
+          </div>
+
+          <div class="participant-list" id="participant-list"></div>
+
+          <div class="message-list private-message-list" id="private-message-list">
+            <p class="empty-state">개인 채팅을 선택해주세요.</p>
+          </div>
+
+          <form class="message-form" id="private-message-form">
+            <textarea
+              class="chat-textarea"
+              name="content"
+              placeholder="개인 메시지 입력"
+              maxlength="500"
+              rows="3"
+              required
+            ></textarea>
+            <button class="primary-button" type="submit">전송</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <!-- Supabase SDK와 공통 클라이언트를 먼저 불러온 뒤 방 기능을 실행합니다. -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabase.js"></script>
+    <script src="./js/room.js"></script>
+  </body>
+</html>

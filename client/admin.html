@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private Chat Room | Admin</title>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <main class="room-page admin-page">
+      <header class="room-header">
+        <div class="room-title-area">
+          <div>
+            <p class="auth-kicker">Private Chat Room Admin</p>
+            <h1 id="admin-room-title">관리자 화면</h1>
+            <p class="room-meta">코드 <span id="admin-room-code">------</span></p>
+          </div>
+
+          <section class="header-member-panel" aria-labelledby="admin-member-title">
+            <h2 id="admin-member-title">참가자</h2>
+            <div class="member-list header-member-list admin-member-list" id="admin-member-list">
+              <p class="empty-state">참가자를 불러오는 중입니다.</p>
+            </div>
+          </section>
+        </div>
+
+        <div class="room-actions">
+          <button class="secondary-button" id="leave-admin-room-button" type="button">
+            방 나가기
+          </button>
+        </div>
+      </header>
+
+      <p class="auth-message room-message" id="admin-message" aria-live="polite"></p>
+
+      <section class="room-layout admin-layout" aria-label="관리자 채팅방">
+        <section class="room-panel chat-panel" aria-labelledby="admin-global-title">
+          <div class="panel-header">
+            <div>
+              <h2 id="admin-global-title">전체 채팅</h2>
+              <p>방 전체에 보낼 메시지를 관리합니다.</p>
+            </div>
+          </div>
+
+          <div class="message-list" id="admin-global-message-list">
+            <p class="empty-state">전체 채팅을 불러오는 중입니다.</p>
+          </div>
+
+          <form class="message-form" id="admin-global-message-form">
+            <input
+              type="text"
+              name="content"
+              placeholder="전체 메시지 입력"
+              maxlength="500"
+              required
+            />
+            <button class="primary-button" type="submit">전송</button>
+          </form>
+        </section>
+
+        <section class="room-panel private-panel" aria-labelledby="admin-private-title">
+          <div class="panel-header">
+            <div>
+              <h2 id="admin-private-title">개인 채팅</h2>
+              <p id="admin-private-description">참가자를 선택해주세요.</p>
+            </div>
+          </div>
+
+          <div class="message-list private-message-list" id="admin-private-message-list">
+            <p class="empty-state">개인 채팅을 선택해주세요.</p>
+          </div>
+
+          <form class="message-form is-disabled" id="admin-private-message-form">
+            <textarea
+              class="chat-textarea"
+              name="content"
+              placeholder="개인 메시지 입력"
+              maxlength="500"
+              rows="3"
+              required
+            ></textarea>
+            <button class="primary-button" type="submit">전송</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabase.js"></script>
+    <script src="./js/admin.js"></script>
+  </body>
+</html>

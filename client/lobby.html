@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private Chat Room | Lobby</title>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <main class="lobby-page">
+      <header class="lobby-header">
+        <div>
+          <p class="auth-kicker">Private Chat Room</p>
+          <h1>로비</h1>
+          <p class="lobby-welcome">
+            <span id="nickname">플레이어</span>님, 참여할 방을 선택하세요.
+          </p>
+        </div>
+
+        <button class="secondary-button" id="logout-button" type="button">
+          로그아웃
+        </button>
+      </header>
+
+      <p class="auth-message lobby-message" id="lobby-message" aria-live="polite"></p>
+
+      <section class="lobby-layout" aria-label="로비 기능">
+        <form class="lobby-panel create-room-form" id="create-room-form">
+          <div>
+            <h2>방 만들기</h2>
+            <p>제목을 입력하면 6자리 입장 코드가 자동으로 생성됩니다.</p>
+          </div>
+
+          <label class="field">
+            <span>방 제목</span>
+            <input
+              type="text"
+              name="title"
+              placeholder="예: 오늘의 비밀 회의"
+              maxlength="40"
+              required
+            />
+          </label>
+
+          <button class="primary-button" type="submit">방 생성</button>
+        </form>
+
+        <section class="lobby-panel room-list-panel" aria-labelledby="rooms-title">
+          <div class="room-list-header">
+            <div>
+              <h2 id="rooms-title">방 목록</h2>
+              <p>현재 생성된 방에 바로 입장할 수 있습니다.</p>
+            </div>
+
+            <button class="ghost-button" id="refresh-button" type="button">
+              새로고침
+            </button>
+          </div>
+
+          <div class="room-list" id="room-list">
+            <p class="empty-state">방 목록을 불러오는 중입니다.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <!-- Supabase SDK와 공통 클라이언트를 먼저 불러온 뒤 로비 기능을 실행합니다. -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabase.js"></script>
+    <script src="./js/lobby.js"></script>
+  </body>
+</html>
