@@ -1248,8 +1248,7 @@
     const deleteSteps = [
       () => supabaseClient.from("private_notes").delete().eq("room_id", roomId),
       () => supabaseClient.from("messages").delete().eq("room_id", roomId),
-      () => supabaseClient.from("room_members").delete().eq("room_id", roomId),
-      () => supabaseClient.from("rooms").delete().eq("id", roomId),
+      () => supabaseClient.from("room_members").delete().eq("room_id", roomId).eq("role", "player"),
     ];
 
     for (const step of deleteSteps) {
@@ -1262,6 +1261,29 @@
         return;
       }
     }
+
+    const { data: deletedRoom, error: roomDeleteError } = await supabaseClient
+      .from("rooms")
+      .delete()
+      .eq("id", roomId)
+      .select("id")
+      .maybeSingle();
+
+    if (roomDeleteError) {
+      deleteRoomButton.disabled = false;
+      deleteRoomButton.textContent = "방 제거";
+      showMessage(getFriendlyError(roomDeleteError));
+      return;
+    }
+
+    if (!deletedRoom) {
+      deleteRoomButton.disabled = false;
+      deleteRoomButton.textContent = "방 제거";
+      showMessage("방 삭제에 실패했습니다. Supabase에서 rooms 삭제 정책이 방 관리자에게 허용되어 있는지 확인해주세요.");
+      return;
+    }
+
+    await supabaseClient.from("room_members").delete().eq("room_id", roomId);
 
     sessionStorage.setItem("lobbyFlashMessage", "방이 제거되었습니다.");
     sessionStorage.setItem("lobbyFlashType", "success");
