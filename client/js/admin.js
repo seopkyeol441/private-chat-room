@@ -32,6 +32,7 @@
   let profileMap = new Map();
   let selectedUserIds = [];
   let lockedPrivateUserIds = new Set();
+  let expandedPrivateUserId = null;
   let messagesChannel = null;
   let membersChannel = null;
   let presenceChannel = null;
@@ -773,6 +774,7 @@
       const panel = document.createElement("section");
       panel.className = "private-chat-slot";
       panel.dataset.userId = userId;
+      panel.classList.toggle("is-expanded", expandedPrivateUserId === userId);
 
       const header = document.createElement("div");
       header.className = "private-chat-slot-header";
@@ -828,6 +830,7 @@
       form.append(textarea, imageButton, sendButton, preview);
       form.addEventListener("submit", (event) => sendPrivateMessage(event, userId));
       form.addEventListener("paste", (event) => handlePrivatePaste(event, userId));
+      panel.addEventListener("click", (event) => togglePrivateChatExpanded(event, userId));
       messageList.addEventListener("dragover", handlePrivateDragOver);
       messageList.addEventListener("dragleave", handlePrivateDragLeave);
       messageList.addEventListener("drop", (event) => handlePrivateDrop(event, userId));
@@ -841,7 +844,17 @@
 
   function closePrivateChat(userId) {
     selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
+    if (expandedPrivateUserId === userId) {
+      expandedPrivateUserId = null;
+    }
     updateSelectedParticipant();
+  }
+
+  function togglePrivateChatExpanded(event, userId) {
+    if (event.target.closest("button, input, textarea, label, a")) return;
+
+    expandedPrivateUserId = expandedPrivateUserId === userId ? null : userId;
+    renderPrivateChatPanels();
   }
 
   async function togglePrivateChatLock(userId) {
