@@ -1022,13 +1022,13 @@ textarea {
   z-index: 80;
   display: grid;
   place-items: center;
-  padding: 42px 18px;
+  padding: 18px;
   background: rgba(10, 18, 26, 0.78);
 }
 
 .image-viewer img {
-  max-width: min(96vw, 1120px);
-  max-height: 88vh;
+  max-width: 98vw;
+  max-height: 94vh;
   border-radius: 10px;
   object-fit: contain;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
