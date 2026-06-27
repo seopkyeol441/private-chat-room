@@ -651,6 +651,12 @@
     localStorage.setItem(getGalleryStorageKey(), JSON.stringify(items));
   }
 
+  function clearGalleryItems() {
+    localStorage.removeItem(getGalleryStorageKey());
+    galleryPage = 0;
+    renderGallery();
+  }
+
   function saveImageToGallery(messageContent) {
     const items = getGalleryItems();
     const alreadySaved = items.some((item) => item.src === messageContent.src);
@@ -1669,6 +1675,16 @@
         if (payload?.room_id !== roomId || payload?.user_id !== currentUser.id) return;
 
         setPrivateChatLocked(Boolean(payload.is_locked));
+      })
+      .on("broadcast", { event: "room-deleted" }, async ({ payload }) => {
+        console.log("Room deleted broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        clearGalleryItems();
+        sessionStorage.setItem("lobbyFlashMessage", "관리자가 방을 제거했습니다.");
+        sessionStorage.setItem("lobbyFlashType", "error");
+        moveToLobby();
       })
       .on("broadcast", { event: "nickname-updated" }, async ({ payload }) => {
         console.log("Room nickname updated broadcast:", payload);

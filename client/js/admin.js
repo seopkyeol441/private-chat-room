@@ -12,6 +12,7 @@
   const globalImagePreview = document.querySelector("#admin-global-image-preview");
   const clearGlobalChatButton = document.querySelector("#clear-global-chat-button");
   const changeNicknameButton = document.querySelector("#admin-change-nickname-button");
+  const deleteRoomButton = document.querySelector("#delete-room-button");
   const memberList = document.querySelector("#admin-member-list");
   const privateDescription = document.querySelector("#admin-private-description");
   const imageViewer = document.querySelector("#admin-image-viewer");
@@ -1209,6 +1210,62 @@
     console.log("Admin global chat cleared broadcast response:", response);
   }
 
+  async function sendRoomDeletedBroadcast() {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "room-deleted",
+      payload: {
+        room_id: roomId,
+        deleted_by: currentUser.id,
+        deleted_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Admin room deleted broadcast response:", response);
+  }
+
+  async function deleteRoom() {
+    clearMessage();
+
+    const confirmed = window.confirm(
+      "방을 제거하면 전체 채팅, 개인 채팅, 메모장 내용, 접속 중인 플레이어의 사진 보관함이 삭제됩니다. 계속할까요?"
+    );
+
+    if (!confirmed) return;
+
+    deleteRoomButton.disabled = true;
+    deleteRoomButton.textContent = "제거 중...";
+
+    const deleteSteps = [
+      () => supabaseClient.from("private_notes").delete().eq("room_id", roomId),
+      () => supabaseClient.from("messages").delete().eq("room_id", roomId),
+      () => supabaseClient.from("room_members").delete().eq("room_id", roomId),
+      () => supabaseClient.from("rooms").delete().eq("id", roomId),
+    ];
+
+    for (const step of deleteSteps) {
+      const { error } = await step();
+
+      if (error) {
+        deleteRoomButton.disabled = false;
+        deleteRoomButton.textContent = "방 제거";
+        showMessage(getFriendlyError(error));
+        return;
+      }
+    }
+
+    await sendRoomDeletedBroadcast();
+    sessionStorage.setItem("lobbyFlashMessage", "방이 제거되었습니다.");
+    sessionStorage.setItem("lobbyFlashType", "success");
+    moveToLobby();
+  }
+
   async function sendPrivateMessage(event, receiverId) {
     event.preventDefault();
     clearMessage();
@@ -1469,6 +1526,7 @@
   globalMessageList.addEventListener("drop", handleGlobalDrop);
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   changeNicknameButton.addEventListener("click", changeNickname);
+  deleteRoomButton.addEventListener("click", deleteRoom);
   leaveButton.addEventListener("click", leaveRoomWithMessage);
   imageViewerClose.addEventListener("click", closeImageViewer);
   imageViewer.addEventListener("click", (event) => {
