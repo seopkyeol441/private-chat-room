@@ -35,6 +35,9 @@
           <button class="secondary-button" id="toggle-note-button" type="button">
             메모장
           </button>
+          <button class="secondary-button" id="toggle-gallery-button" type="button">
+            사진 보관함
+          </button>
           <button class="secondary-button" id="change-nickname-button" type="button">
             닉네임 변경
           </button>
@@ -64,6 +67,22 @@
               메모 저장
             </button>
             <span class="note-resize-handle" id="note-resize-handle" aria-hidden="true"></span>
+          </section>
+
+          <section class="room-panel gallery-popover is-hidden" id="gallery-body" aria-labelledby="gallery-title">
+            <div class="panel-header">
+              <div>
+                <h2 id="gallery-title">사진 보관함</h2>
+                <p>내가 보관한 사진만 표시됩니다.</p>
+              </div>
+              <button class="ghost-button" id="close-gallery-button" type="button">
+                닫기
+              </button>
+            </div>
+
+            <div class="gallery-list" id="gallery-list">
+              <p class="empty-state">보관한 사진이 없습니다.</p>
+            </div>
           </section>
         </div>
       </header>

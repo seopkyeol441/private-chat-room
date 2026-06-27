@@ -21,6 +21,10 @@
   const noteWindowHeader = document.querySelector("#note-window-header");
   const noteResizeHandle = document.querySelector("#note-resize-handle");
   const toggleNoteButton = document.querySelector("#toggle-note-button");
+  const toggleGalleryButton = document.querySelector("#toggle-gallery-button");
+  const galleryBody = document.querySelector("#gallery-body");
+  const galleryList = document.querySelector("#gallery-list");
+  const closeGalleryButton = document.querySelector("#close-gallery-button");
   const closeNoteButton = document.querySelector("#close-note-button");
   const privateNote = document.querySelector("#private-note");
   const saveNoteButton = document.querySelector("#save-note-button");
@@ -476,7 +480,12 @@
       downloadButton.textContent = "저장";
       downloadButton.addEventListener("click", () => downloadChatImage(messageContent));
 
-      actions.append(viewButton, downloadButton);
+      const keepButton = document.createElement("button");
+      keepButton.type = "button";
+      keepButton.textContent = "보관";
+      keepButton.addEventListener("click", () => saveImageToGallery(messageContent));
+
+      actions.append(viewButton, downloadButton, keepButton);
       wrapper.append(actions);
 
       if (messageContent.text) {
@@ -502,6 +511,110 @@
     document.body.append(link);
     link.click();
     link.remove();
+  }
+
+  function getGalleryStorageKey() {
+    return `privateChatGallery:${currentUser.id}:${roomId}`;
+  }
+
+  function getGalleryItems() {
+    try {
+      return JSON.parse(localStorage.getItem(getGalleryStorageKey())) || [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveGalleryItems(items) {
+    localStorage.setItem(getGalleryStorageKey(), JSON.stringify(items));
+  }
+
+  function saveImageToGallery(messageContent) {
+    const items = getGalleryItems();
+    const alreadySaved = items.some((item) => item.src === messageContent.src);
+
+    if (alreadySaved) {
+      showMessage("이미 사진 보관함에 저장된 사진입니다.");
+      return;
+    }
+
+    items.unshift({
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      src: messageContent.src,
+      name: messageContent.name || `chat-image-${Date.now()}.jpg`,
+      text: messageContent.text || "",
+      savedAt: new Date().toISOString(),
+    });
+
+    saveGalleryItems(items);
+    renderGallery();
+    showMessage("사진 보관함에 저장했습니다.", "success");
+  }
+
+  function renderGallery() {
+    const items = getGalleryItems();
+
+    if (!items.length) {
+      galleryList.innerHTML = '<p class="empty-state">보관한 사진이 없습니다.</p>';
+      return;
+    }
+
+    galleryList.innerHTML = "";
+
+    items.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "gallery-item";
+
+      const image = document.createElement("img");
+      image.src = item.src;
+      image.alt = item.name || "보관한 사진";
+      image.loading = "lazy";
+
+      const actions = document.createElement("div");
+      actions.className = "gallery-actions";
+
+      const viewButton = document.createElement("button");
+      viewButton.type = "button";
+      viewButton.textContent = "보기";
+      viewButton.addEventListener("click", () => {
+        window.open(item.src, "_blank", "noopener");
+      });
+
+      const downloadButton = document.createElement("button");
+      downloadButton.type = "button";
+      downloadButton.textContent = "저장";
+      downloadButton.addEventListener("click", () => downloadChatImage(item));
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.textContent = "삭제";
+      removeButton.addEventListener("click", () => removeImageFromGallery(item.id));
+
+      actions.append(viewButton, downloadButton, removeButton);
+      card.append(image, actions);
+      galleryList.append(card);
+    });
+  }
+
+  function removeImageFromGallery(itemId) {
+    const items = getGalleryItems().filter((item) => item.id !== itemId);
+
+    saveGalleryItems(items);
+    renderGallery();
+  }
+
+  function toggleGallery() {
+    const shouldOpen = galleryBody.classList.contains("is-hidden");
+
+    if (shouldOpen) {
+      renderGallery();
+    }
+
+    galleryBody.classList.toggle("is-hidden", !shouldOpen);
+  }
+
+  function closeGallery() {
+    galleryBody.classList.add("is-hidden");
   }
 
   function resizeImageFile(file, maxSize = 900, quality = 0.78) {
@@ -1384,6 +1497,8 @@
   privateMessageList.addEventListener("dragleave", handlePrivateDragLeave);
   privateMessageList.addEventListener("drop", handlePrivateDrop);
   toggleNoteButton.addEventListener("click", togglePrivateNote);
+  toggleGalleryButton.addEventListener("click", toggleGallery);
+  closeGalleryButton.addEventListener("click", closeGallery);
   changeNicknameButton.addEventListener("click", changeNickname);
   closeNoteButton.addEventListener("click", closePrivateNote);
   noteWindowHeader.addEventListener("pointerdown", startDraggingNote);
