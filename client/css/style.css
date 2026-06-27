@@ -335,6 +335,29 @@ textarea {
   padding: 14px 16px 36px;
 }
 
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding-bottom: 14px;
+}
+
+.admin-page .room-header,
+.admin-page .room-message {
+  flex: 0 0 auto;
+}
+
+.admin-page .admin-layout {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.admin-page .room-panel {
+  overflow: hidden;
+}
+
 .room-header {
   display: flex;
   align-items: flex-start;
