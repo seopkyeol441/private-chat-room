@@ -784,6 +784,50 @@
     globalMessageForm.reset();
   }
 
+  function getGlobalImageInput() {
+    return globalMessageForm.querySelector('input[name="image"]');
+  }
+
+  function setGlobalImageFile(file, sourceLabel) {
+    if (!file || !file.type.startsWith("image/")) return false;
+
+    const imageInput = getGlobalImageInput();
+    const dataTransfer = new DataTransfer();
+
+    dataTransfer.items.add(file);
+    imageInput.files = dataTransfer.files;
+    showMessage(`${sourceLabel}한 사진이 선택되었습니다. 전송 버튼을 눌러 보내세요.`, "success");
+    return true;
+  }
+
+  function handleGlobalPaste(event) {
+    const file = [...(event.clipboardData?.files || [])].find((item) => item.type.startsWith("image/"));
+
+    if (setGlobalImageFile(file, "붙여넣기")) {
+      event.preventDefault();
+    }
+  }
+
+  function handleGlobalDragOver(event) {
+    event.preventDefault();
+    globalMessageList.classList.add("is-drag-over");
+  }
+
+  function handleGlobalDragLeave() {
+    globalMessageList.classList.remove("is-drag-over");
+  }
+
+  function handleGlobalDrop(event) {
+    event.preventDefault();
+    globalMessageList.classList.remove("is-drag-over");
+
+    const file = [...(event.dataTransfer?.files || [])].find((item) => item.type.startsWith("image/"));
+
+    if (!setGlobalImageFile(file, "드래그")) {
+      showMessage("이미지 파일만 드래그해서 넣을 수 있습니다.");
+    }
+  }
+
   async function clearGlobalChat() {
     clearMessage();
 
@@ -1057,6 +1101,10 @@
   }
 
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
+  globalMessageForm.addEventListener("paste", handleGlobalPaste);
+  globalMessageList.addEventListener("dragover", handleGlobalDragOver);
+  globalMessageList.addEventListener("dragleave", handleGlobalDragLeave);
+  globalMessageList.addEventListener("drop", handleGlobalDrop);
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   changeNicknameButton.addEventListener("click", changeNickname);
   leaveButton.addEventListener("click", moveToLobby);
