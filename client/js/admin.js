@@ -25,6 +25,7 @@
   let membersChannel = null;
   let presenceChannel = null;
   let kickChannel = null;
+  let kickChannelReady = false;
   let onlineUserIds = new Set();
 
   function showMessage(message, type = "error") {
@@ -285,6 +286,12 @@
 
     const memberName = getMemberName(member);
 
+    const kickMessage = `${memberName}님이 관리자에 의해 추방되었습니다.`;
+
+    // 버튼을 누른 즉시 플레이어 화면에 추방 신호를 보냅니다.
+    // DB 삭제 완료를 기다리지 않아야 플레이어가 바로 로비로 이동합니다.
+    const kickBroadcastPromise = sendKickBroadcast(member.user_id, kickMessage);
+
     const { data: deletedMember, error: deleteError } = await supabaseClient
       .from("room_members")
       .delete()
@@ -304,11 +311,7 @@
       return;
     }
 
-    const kickMessage = `${memberName}님이 관리자에 의해 추방되었습니다.`;
-
-    // 삭제가 성공한 직후 추방당한 플레이어에게 먼저 알려줍니다.
-    // 전체 채팅 저장보다 이 알림을 먼저 보내야 플레이어 화면이 바로 반응합니다.
-    await sendKickBroadcast(member.user_id, kickMessage);
+    await kickBroadcastPromise;
 
     const { error: messageError } = await supabaseClient.from("messages").insert({
       room_id: roomId,
@@ -335,6 +338,10 @@
   async function sendKickBroadcast(userId, message) {
     if (!kickChannel) return;
 
+    if (!kickChannelReady) {
+      await waitForKickChannel();
+    }
+
     const response = await kickChannel.send({
       type: "broadcast",
       event: "player-kicked",
@@ -346,6 +353,16 @@
     });
 
     console.log("Admin kick broadcast response:", response);
+  }
+
+  async function waitForKickChannel() {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      if (kickChannelReady) return true;
+      await new Promise((resolve) => window.setTimeout(resolve, 50));
+    }
+
+    console.warn("Kick broadcast channel is not ready yet.");
+    return false;
   }
 
   function createMessageElement(message) {
@@ -563,6 +580,10 @@
       .subscribe((status, error) => {
         console.log("Admin kick broadcast status:", status);
 
+        if (status === "SUBSCRIBED") {
+          kickChannelReady = true;
+        }
+
         if (error) {
           console.error("Admin kick broadcast error:", error);
         }
@@ -589,6 +610,7 @@
     if (kickChannel) {
       supabaseClient.removeChannel(kickChannel);
       kickChannel = null;
+      kickChannelReady = false;
     }
   }
 

@@ -252,7 +252,7 @@
     return true;
   }
 
-  async function handleKickedFromRoom(message = "관리자에 의해 방에서 추방되었습니다. 잠시 후 로비로 이동합니다.") {
+  async function handleKickedFromRoom(message = "관리자에 의해 방에서 추방되었습니다. 로비로 이동합니다.") {
     if (hasBeenKicked) return;
 
     hasBeenKicked = true;
@@ -263,7 +263,7 @@
     globalMessageForm.classList.add("is-disabled");
     privateMessageForm.classList.add("is-disabled");
     leaveRoomButton.disabled = true;
-    window.setTimeout(moveToLobby, 2200);
+    window.setTimeout(moveToLobby, 900);
   }
 
   function renderMemberList() {
