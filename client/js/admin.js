@@ -388,7 +388,10 @@
       sender_id: currentUser.id,
       receiver_id: null,
       message_type: "global",
-      content: kickMessage,
+      content: JSON.stringify({
+        kind: "system",
+        text: kickMessage,
+      }),
     });
 
     if (messageError) {
