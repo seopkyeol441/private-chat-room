@@ -61,6 +61,7 @@
   let galleryPage = 0;
   let membershipCheckTimer = null;
   let hasBeenKicked = false;
+  let privateChatLocked = false;
 
   function showMessage(message, type = "error") {
     roomMessage.textContent = message;
@@ -429,6 +430,7 @@
     selectedPrivateUserId = admin.user_id;
     privateChatDescription.textContent = `관리자 ${getProfileName(admin.user_id)}님과의 1:1 채팅입니다.`;
     privateMessageForm.classList.remove("is-disabled");
+    updatePrivateMessageLockUI();
     loadPrivateMessages();
   }
 
@@ -442,6 +444,7 @@
 
     privateChatDescription.textContent = `${getProfileName(selectedPrivateUserId)}님과의 1:1 채팅입니다.`;
     privateMessageForm.classList.remove("is-disabled");
+    updatePrivateMessageLockUI();
   }
 
   function selectPrivateUser(userId) {
@@ -456,6 +459,31 @@
 
   function renderEmptyPrivateMessages(message) {
     privateMessageList.innerHTML = `<p class="empty-state">${message}</p>`;
+  }
+
+  function updatePrivateMessageLockUI() {
+    const shouldLock = privateChatLocked && !isAdmin();
+
+    privateMessageForm.classList.toggle("is-private-locked", shouldLock);
+    privateMessageForm.querySelectorAll("textarea, input, button").forEach((control) => {
+      control.disabled = shouldLock;
+    });
+
+    if (shouldLock) {
+      privateChatDescription.textContent = "관리자가 개인 채팅 메시지를 잠갔습니다.";
+    }
+  }
+
+  function setPrivateChatLocked(isLocked) {
+    privateChatLocked = isLocked;
+    updatePrivateMessageLockUI();
+    if (!isLocked) {
+      renderPrivateChatSelector();
+    }
+    showMessage(
+      isLocked ? "관리자가 개인 채팅 메시지를 잠갔습니다." : "개인 채팅 메시지 잠금이 해제되었습니다.",
+      isLocked ? "error" : "success"
+    );
   }
 
   function createMessageElement(message) {
@@ -1181,6 +1209,11 @@
     event.preventDefault();
     clearMessage();
 
+    if (privateChatLocked && !isAdmin()) {
+      showMessage("관리자가 개인 채팅 메시지를 잠갔습니다.");
+      return;
+    }
+
     if (!selectedPrivateUserId) {
       showMessage("개인 채팅 상대를 선택해주세요.");
       return;
@@ -1587,6 +1620,13 @@
 
         await loadGlobalMessages();
         await loadPrivateMessages();
+      })
+      .on("broadcast", { event: "private-chat-lock-changed" }, async ({ payload }) => {
+        console.log("Room private chat lock changed broadcast:", payload);
+
+        if (payload?.room_id !== roomId || payload?.user_id !== currentUser.id) return;
+
+        setPrivateChatLocked(Boolean(payload.is_locked));
       })
       .on("broadcast", { event: "nickname-updated" }, async ({ payload }) => {
         console.log("Room nickname updated broadcast:", payload);

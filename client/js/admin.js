@@ -26,6 +26,7 @@
   let roomMembers = [];
   let profileMap = new Map();
   let selectedUserIds = [];
+  let lockedPrivateUserIds = new Set();
   let messagesChannel = null;
   let membersChannel = null;
   let presenceChannel = null;
@@ -676,7 +677,14 @@
       closeButton.setAttribute("aria-label", "개인 채팅 닫기");
       closeButton.addEventListener("click", () => closePrivateChat(userId));
 
-      header.append(title, closeButton);
+      const lockButton = document.createElement("button");
+      lockButton.className = "private-lock-button";
+      lockButton.type = "button";
+      lockButton.textContent = lockedPrivateUserIds.has(userId) ? "잠금 해제" : "잠금";
+      lockButton.classList.toggle("is-locked", lockedPrivateUserIds.has(userId));
+      lockButton.addEventListener("click", () => togglePrivateChatLock(userId));
+
+      header.append(title, lockButton, closeButton);
 
       const messageList = document.createElement("div");
       messageList.className = "message-list private-message-list private-slot-message-list";
@@ -731,6 +739,22 @@
   function closePrivateChat(userId) {
     selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
     updateSelectedParticipant();
+  }
+
+  async function togglePrivateChatLock(userId) {
+    if (!userId) return;
+
+    const shouldLock = !lockedPrivateUserIds.has(userId);
+
+    if (shouldLock) {
+      lockedPrivateUserIds.add(userId);
+    } else {
+      lockedPrivateUserIds.delete(userId);
+    }
+
+    renderPrivateChatPanels();
+    await sendPrivateChatLockBroadcast(userId, shouldLock);
+    showMessage(`${getProfileName(userId)}님의 개인 채팅을 ${shouldLock ? "잠금" : "잠금 해제"}했습니다.`, "success");
   }
 
   function getPrivateChatPanel(userId) {
@@ -936,6 +960,28 @@
     });
 
     console.log("Admin message sent broadcast response:", response);
+  }
+
+  async function sendPrivateChatLockBroadcast(userId, isLocked) {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "private-chat-lock-changed",
+      payload: {
+        room_id: roomId,
+        user_id: userId,
+        is_locked: isLocked,
+        changed_by: currentUser.id,
+        changed_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Admin private chat lock broadcast response:", response);
   }
 
   async function sendGlobalMessage(event) {

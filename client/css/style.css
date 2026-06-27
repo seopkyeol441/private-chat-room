@@ -487,6 +487,25 @@ textarea {
   font-size: 14px;
 }
 
+.private-lock-button {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #cfd8e3;
+  border-radius: 999px;
+  color: #263645;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.private-lock-button.is-locked {
+  border-color: #d94a4a;
+  color: #a83232;
+  background: #fff1f1;
+}
+
 .private-slot-message-list {
   margin-bottom: 10px;
   padding: 10px;
@@ -618,6 +637,11 @@ textarea {
 }
 
 .message-form.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.message-form.is-private-locked {
   opacity: 0.55;
   pointer-events: none;
 }
