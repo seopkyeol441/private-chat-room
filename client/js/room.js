@@ -407,6 +407,7 @@
     const item = document.createElement("article");
     const isMine = message.sender_id === currentUser.id;
     item.className = `chat-message${isMine ? " is-mine" : ""}`;
+    const parsedMessage = parseMessageContent(message.content);
 
     const messageHeader = document.createElement("div");
     messageHeader.className = "message-header";
@@ -426,11 +427,79 @@
       messageHeader.append(deleteButton);
     }
 
-    const content = document.createElement("p");
-    content.textContent = message.content;
+    const content = createMessageContentElement(parsedMessage);
 
     item.append(messageHeader, content);
     return item;
+  }
+
+  function parseMessageContent(content) {
+    try {
+      const parsed = JSON.parse(content);
+
+      if (parsed?.kind === "image" && parsed.src) {
+        return parsed;
+      }
+    } catch (error) {
+      // 기존 텍스트 메시지는 JSON이 아니므로 그대로 표시합니다.
+    }
+
+    return { kind: "text", text: content };
+  }
+
+  function createMessageContentElement(messageContent) {
+    if (messageContent.kind === "image") {
+      const wrapper = document.createElement("div");
+      wrapper.className = "chat-image-message";
+
+      const image = document.createElement("img");
+      image.src = messageContent.src;
+      image.alt = messageContent.name || "채팅 이미지";
+      image.loading = "lazy";
+
+      wrapper.append(image);
+
+      if (messageContent.text) {
+        const caption = document.createElement("p");
+        caption.textContent = messageContent.text;
+        wrapper.append(caption);
+      }
+
+      return wrapper;
+    }
+
+    const content = document.createElement("p");
+    content.textContent = messageContent.text;
+    return content;
+  }
+
+  function resizeImageFile(file, maxSize = 900, quality = 0.78) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.addEventListener("error", () => reject(new Error("이미지를 읽지 못했습니다.")));
+      reader.addEventListener("load", () => {
+        const image = new Image();
+
+        image.addEventListener("error", () => reject(new Error("이미지를 불러오지 못했습니다.")));
+        image.addEventListener("load", () => {
+          const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+          const width = Math.max(1, Math.round(image.width * scale));
+          const height = Math.max(1, Math.round(image.height * scale));
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          canvas.width = width;
+          canvas.height = height;
+          context.drawImage(image, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        });
+
+        image.src = reader.result;
+      });
+
+      reader.readAsDataURL(file);
+    });
   }
 
   function renderMessages(container, messages, emptyMessage) {
@@ -611,15 +680,33 @@
 
     const formData = new FormData(globalMessageForm);
     const content = formData.get("content").trim();
+    const imageFile = formData.get("image");
 
-    if (!content) return;
+    if (!content && (!imageFile || !imageFile.size)) return;
+
+    let messageContent = content;
+
+    if (imageFile && imageFile.size) {
+      if (!imageFile.type.startsWith("image/")) {
+        showMessage("이미지 파일만 보낼 수 있습니다.");
+        return;
+      }
+
+      const imageDataUrl = await resizeImageFile(imageFile);
+      messageContent = JSON.stringify({
+        kind: "image",
+        src: imageDataUrl,
+        name: imageFile.name,
+        text: content,
+      });
+    }
 
     const { error } = await supabaseClient.from("messages").insert({
       room_id: roomId,
       sender_id: currentUser.id,
       receiver_id: null,
       message_type: "global",
-      content,
+      content: messageContent,
     });
 
     if (error) {

@@ -560,9 +560,22 @@ textarea {
   line-height: 1.45;
 }
 
+.chat-image-message {
+  display: grid;
+  gap: 8px;
+}
+
+.chat-image-message img {
+  display: block;
+  max-width: min(100%, 360px);
+  max-height: 320px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
 .message-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 84px;
+  grid-template-columns: minmax(0, 1fr) auto 84px;
   gap: 10px;
 }
 
@@ -598,6 +611,28 @@ textarea {
   align-self: stretch;
   min-height: 46px;
   margin-top: 0;
+}
+
+.image-upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  color: #263645;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.image-upload-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .participant-list {
