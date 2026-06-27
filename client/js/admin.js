@@ -332,7 +332,6 @@
     const panel = getPrivateChatPanel(userId);
 
     if (panel) {
-      closeMembersPopover();
       panel.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
       panel.classList.add("is-highlighted");
       window.setTimeout(() => {
@@ -373,6 +372,7 @@
 
   function startDraggingMembersPopover(event) {
     if (event.button !== 0) return;
+    if (event.target.closest("button")) return;
 
     const rect = membersPopover.getBoundingClientRect();
     const startX = event.clientX;
@@ -1610,7 +1610,10 @@
   changeNicknameButton.addEventListener("click", changeNickname);
   deleteRoomButton.addEventListener("click", deleteRoom);
   toggleMembersButton.addEventListener("click", toggleMembersPopover);
-  closeMembersButton.addEventListener("click", closeMembersPopover);
+  closeMembersButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeMembersPopover();
+  });
   membersPopoverHeader.addEventListener("pointerdown", startDraggingMembersPopover);
   leaveButton.addEventListener("click", leaveRoomWithMessage);
   imageViewerClose.addEventListener("click", closeImageViewer);
