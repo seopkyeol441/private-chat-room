@@ -81,6 +81,20 @@
     window.location.href = `./admin.html?roomId=${encodeURIComponent(roomId)}`;
   }
 
+  async function addRoomEventMessage(roomId, message) {
+    const { error } = await supabaseClient.from("messages").insert({
+      room_id: roomId,
+      sender_id: currentUser.id,
+      receiver_id: null,
+      message_type: "global",
+      content: message,
+    });
+
+    if (error) {
+      console.warn("Room event message failed:", error);
+    }
+  }
+
   // lobby.html은 로그인 사용자만 접근할 수 있으므로 세션이 없으면 로그인 화면으로 보냅니다.
   async function requireLogin() {
     const {
@@ -228,6 +242,7 @@
       return;
     }
 
+    await addRoomEventMessage(room.id, `${currentProfile.nickname || currentProfile.username}님이 관리자로 방에 들어왔습니다.`);
     moveToAdmin(room.id);
   }
 
@@ -270,8 +285,10 @@
 
       if (existingMembership) {
         if (existingMembership.role === "admin") {
+          await addRoomEventMessage(roomId, `${currentProfile.nickname || currentProfile.username}님이 관리자로 방에 들어왔습니다.`);
           moveToAdmin(roomId);
         } else {
+          await addRoomEventMessage(roomId, `${currentProfile.nickname || currentProfile.username}님이 방에 들어왔습니다.`);
           moveToRoom(roomId);
         }
 
@@ -296,6 +313,7 @@
         throw error;
       }
 
+      await addRoomEventMessage(roomId, `${currentProfile.nickname || currentProfile.username}님이 방에 들어왔습니다.`);
       moveToRoom(roomId);
     } catch (error) {
       showMessage(getFriendlyError(error));

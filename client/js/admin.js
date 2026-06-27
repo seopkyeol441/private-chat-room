@@ -118,6 +118,26 @@
     window.location.href = "./lobby.html";
   }
 
+  async function addRoomEventMessage(message) {
+    const { error } = await supabaseClient.from("messages").insert({
+      room_id: roomId,
+      sender_id: currentUser.id,
+      receiver_id: null,
+      message_type: "global",
+      content: message,
+    });
+
+    if (error) {
+      console.warn("Admin room event message failed:", error);
+    }
+  }
+
+  async function leaveRoomWithMessage() {
+    await addRoomEventMessage(`관리자 ${getProfileName(currentUser.id)}님이 방에서 나갔습니다.`);
+    await sendMessageSentBroadcast("global");
+    moveToLobby();
+  }
+
   function requireRoomId() {
     if (!roomId) {
       showMessage("방 정보를 찾을 수 없습니다.");
@@ -1425,7 +1445,7 @@
   globalMessageList.addEventListener("drop", handleGlobalDrop);
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   changeNicknameButton.addEventListener("click", changeNickname);
-  leaveButton.addEventListener("click", moveToLobby);
+  leaveButton.addEventListener("click", leaveRoomWithMessage);
   imageViewerClose.addEventListener("click", closeImageViewer);
   imageViewer.addEventListener("click", (event) => {
     if (event.target === imageViewer) {

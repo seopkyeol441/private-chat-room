@@ -153,6 +153,27 @@
     window.location.href = "./lobby.html";
   }
 
+  async function addRoomEventMessage(message) {
+    const { error } = await supabaseClient.from("messages").insert({
+      room_id: roomId,
+      sender_id: currentUser.id,
+      receiver_id: null,
+      message_type: "global",
+      content: message,
+    });
+
+    if (error) {
+      console.warn("Room event message failed:", error);
+    }
+  }
+
+  async function leaveRoomWithMessage() {
+    const roleLabel = isAdmin() ? "관리자" : "플레이어";
+    await addRoomEventMessage(`${roleLabel} ${getProfileName(currentUser.id)}님이 방에서 나갔습니다.`);
+    await sendMessageSentBroadcast("global");
+    moveToLobby();
+  }
+
   // URL에 roomId가 없으면 어떤 방인지 알 수 없으므로 로비로 돌려보냅니다.
   function requireRoomId() {
     if (!roomId) {
@@ -1751,7 +1772,7 @@
   noteResizeHandle.addEventListener("pointerdown", startResizingNote);
   saveNoteButton.addEventListener("click", savePrivateNote);
   adminPageButton.addEventListener("click", moveToAdminPage);
-  leaveRoomButton.addEventListener("click", moveToLobby);
+  leaveRoomButton.addEventListener("click", leaveRoomWithMessage);
   window.addEventListener("beforeunload", cleanupRealtime);
   window.addEventListener("resize", keepNoteWindowInViewport);
   window.addEventListener("resize", keepGalleryWindowInViewport);
