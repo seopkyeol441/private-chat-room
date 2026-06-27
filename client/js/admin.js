@@ -269,7 +269,9 @@
       const kickButton = document.createElement("button");
       kickButton.className = "kick-button";
       kickButton.type = "button";
-      kickButton.textContent = "추방";
+      kickButton.textContent = "×";
+      kickButton.title = `${getMemberName(member)}님 추방`;
+      kickButton.setAttribute("aria-label", `${getMemberName(member)}님 추방`);
       kickButton.addEventListener("click", () => kickParticipant(member));
 
       item.append(button, kickButton);
