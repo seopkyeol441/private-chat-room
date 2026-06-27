@@ -9,6 +9,7 @@
   const globalMessageList = document.querySelector("#admin-global-message-list");
   const privateChatGrid = document.querySelector("#admin-private-chat-grid");
   const globalMessageForm = document.querySelector("#admin-global-message-form");
+  const globalImagePreview = document.querySelector("#admin-global-image-preview");
   const clearGlobalChatButton = document.querySelector("#clear-global-chat-button");
   const changeNicknameButton = document.querySelector("#admin-change-nickname-button");
   const memberList = document.querySelector("#admin-member-list");
@@ -804,6 +805,7 @@
 
     await sendMessageSentBroadcast("global");
     globalMessageForm.reset();
+    clearGlobalImagePreview();
   }
 
   function getGlobalImageInput() {
@@ -818,8 +820,51 @@
 
     dataTransfer.items.add(file);
     imageInput.files = dataTransfer.files;
+    renderGlobalImagePreview(file);
     showMessage(`${sourceLabel}한 사진이 선택되었습니다. 전송 버튼을 눌러 보내세요.`, "success");
     return true;
+  }
+
+  function renderGlobalImagePreview(file) {
+    const previewUrl = URL.createObjectURL(file);
+
+    globalImagePreview.innerHTML = "";
+    globalImagePreview.classList.remove("is-hidden");
+
+    const image = document.createElement("img");
+    image.src = previewUrl;
+    image.alt = "전송할 사진 미리보기";
+    image.addEventListener("load", () => URL.revokeObjectURL(previewUrl), { once: true });
+
+    const info = document.createElement("span");
+    info.textContent = `${file.name || "붙여넣은 사진"} 선택됨`;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "제거";
+    removeButton.addEventListener("click", clearGlobalImageSelection);
+
+    globalImagePreview.append(image, info, removeButton);
+  }
+
+  function clearGlobalImagePreview() {
+    globalImagePreview.innerHTML = "";
+    globalImagePreview.classList.add("is-hidden");
+  }
+
+  function clearGlobalImageSelection() {
+    getGlobalImageInput().value = "";
+    clearGlobalImagePreview();
+  }
+
+  function handleGlobalImageChange(event) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      renderGlobalImagePreview(file);
+    } else {
+      clearGlobalImagePreview();
+    }
   }
 
   function handleGlobalPaste(event) {
@@ -1132,6 +1177,7 @@
   }
 
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
+  getGlobalImageInput().addEventListener("change", handleGlobalImageChange);
   globalMessageForm.addEventListener("paste", handleGlobalPaste);
   globalMessageList.addEventListener("dragover", handleGlobalDragOver);
   globalMessageList.addEventListener("dragleave", handleGlobalDragLeave);
