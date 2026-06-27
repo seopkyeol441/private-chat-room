@@ -272,7 +272,12 @@
   async function kickParticipant(member) {
     clearMessage();
 
-    if (!member || member.role === "admin") {
+    if (!member || !member.id) {
+      showMessage("추방할 참가자 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    if (member.role === "admin") {
       showMessage("관리자는 추방할 수 없습니다.");
       return;
     }
@@ -281,6 +286,25 @@
     const ok = window.confirm(`${memberName}님을 이 방에서 추방할까요?`);
 
     if (!ok) return;
+
+    const { data: deletedMember, error: deleteError } = await supabaseClient
+      .from("room_members")
+      .delete()
+      .eq("id", member.id)
+      .eq("room_id", roomId)
+      .eq("role", "player")
+      .select("id")
+      .maybeSingle();
+
+    if (deleteError) {
+      showMessage(getFriendlyError(deleteError));
+      return;
+    }
+
+    if (!deletedMember) {
+      showMessage("추방 처리에 실패했습니다. Supabase RLS에서 관리자의 room_members 삭제 권한을 확인해주세요.");
+      return;
+    }
 
     const { error: messageError } = await supabaseClient.from("messages").insert({
       room_id: roomId,
@@ -292,18 +316,6 @@
 
     if (messageError) {
       showMessage(getFriendlyError(messageError));
-      return;
-    }
-
-    const { error: deleteError } = await supabaseClient
-      .from("room_members")
-      .delete()
-      .eq("room_id", roomId)
-      .eq("user_id", member.user_id)
-      .eq("role", "player");
-
-    if (deleteError) {
-      showMessage(getFriendlyError(deleteError));
       return;
     }
 
