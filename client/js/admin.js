@@ -55,7 +55,7 @@
   }
 
   function getFriendlyError(error) {
-    if (!error) return "?????녿뒗 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.";
+    if (!error) return "알 수 없는 오류가 발생했습니다.";
 
     if (error.code || error.details || error.hint) {
       console.error("Supabase error:", {
@@ -69,7 +69,7 @@
     const message = error.message || String(error);
 
     if (message.includes("row-level security")) {
-      return "沅뚰븳???놁뒿?덈떎. Supabase RLS ?뺤콉???뺤씤?댁＜?몄슂.";
+      return "권한이 없습니다. Supabase RLS 정책을 확인해주세요.";
     }
 
     return message;
@@ -77,7 +77,7 @@
 
   function getProfileName(userId) {
     const profile = profileMap.get(userId);
-    return profile?.nickname || profile?.username || "?????놁쓬";
+    return profile?.nickname || profile?.username || "알 수 없음";
   }
 
   async function refreshProfile(userId) {
@@ -137,14 +137,14 @@
   }
 
   async function leaveRoomWithMessage() {
-    await addRoomEventMessage(`愿由ъ옄 ${getProfileName(currentUser.id)}?섏씠 諛⑹뿉???섍컮?듬땲??`);
+    await addRoomEventMessage(`관리자 ${getProfileName(currentUser.id)}님이 방에서 나갔습니다.`);
     await sendMessageSentBroadcast("global");
     moveToLobby();
   }
 
   function requireRoomId() {
     if (!roomId) {
-      showMessage("諛??뺣낫瑜?李얠쓣 ???놁뒿?덈떎.");
+      showMessage("방 정보를 찾을 수 없습니다.");
       window.setTimeout(moveToLobby, 800);
       return false;
     }
@@ -182,13 +182,13 @@
     }
 
     if (!data) {
-      showMessage("??諛⑹쓽 李멸??먭? ?꾨떃?덈떎.");
+      showMessage("이 방의 참가자가 아닙니다.");
       window.setTimeout(moveToLobby, 900);
       return false;
     }
 
     if (data.role !== "admin") {
-      showMessage("愿由ъ옄留??묎렐?????덉뒿?덈떎.");
+      showMessage("관리자만 접근할 수 있습니다.");
       window.setTimeout(moveToRoom, 900);
       return false;
     }
@@ -210,7 +210,7 @@
     }
 
     if (!data) {
-      showMessage("諛⑹쓣 李얠쓣 ???놁뒿?덈떎.");
+      showMessage("방을 찾을 수 없습니다.");
       window.setTimeout(moveToLobby, 900);
       return false;
     }
@@ -262,8 +262,8 @@
 
     if (!participants.length) {
       selectedUserIds = [];
-      memberList.innerHTML = '<p class="empty-state">?꾩쭅 李멸??먭? ?놁뒿?덈떎.</p>';
-      privateDescription.textContent = "李멸??먭? ?ㅼ뼱?ㅻ㈃ 媛쒖씤 梨꾪똿???쒖옉?????덉뒿?덈떎.";
+      memberList.innerHTML = '<p class="empty-state">아직 참가자가 없습니다.</p>';
+      privateDescription.textContent = "참가자가 들어오면 개인 채팅을 시작할 수 있습니다.";
       renderPrivateChatPanels();
       return;
     }
@@ -301,9 +301,9 @@
       const kickButton = document.createElement("button");
       kickButton.className = "kick-button";
       kickButton.type = "button";
-      kickButton.textContent = "횞";
-      kickButton.title = `${getMemberName(member)}??異붾갑`;
-      kickButton.setAttribute("aria-label", `${getMemberName(member)}??異붾갑`);
+      kickButton.textContent = "×";
+      kickButton.title = `${getMemberName(member)}님 추방`;
+      kickButton.setAttribute("aria-label", `${getMemberName(member)}님 추방`);
       kickButton.addEventListener("click", () => kickParticipant(member));
 
       item.append(button, kickButton);
@@ -319,9 +319,9 @@
     });
 
     if (!selectedUserIds.length) {
-      privateDescription.textContent = "李멸??먮? 理쒕? 4紐낃퉴吏 ?좏깮?댁＜?몄슂.";
+      privateDescription.textContent = "참가자를 최대 4명까지 선택해주세요.";
     } else {
-      privateDescription.textContent = `${selectedUserIds.length}/4紐낃낵 媛쒖씤 梨꾪똿 以묒엯?덈떎.`;
+      privateDescription.textContent = `${selectedUserIds.length}/4명과 개인 채팅 중입니다.`;
     }
 
     renderPrivateChatPanels();
@@ -332,7 +332,7 @@
       selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
     } else {
       if (selectedUserIds.length >= 4) {
-        showMessage("媛쒖씤 梨꾪똿? ??踰덉뿉 理쒕? 4紐낃퉴吏 ?좏깮?????덉뒿?덈떎.");
+        showMessage("개인 채팅은 한 번에 최대 4명까지 선택할 수 있습니다.");
         return;
       }
 
@@ -346,18 +346,18 @@
     clearMessage();
 
     if (!member || !member.id) {
-      showMessage("異붾갑??李멸????뺣낫瑜?李얠쓣 ???놁뒿?덈떎.");
+      showMessage("추방할 참가자 정보를 찾을 수 없습니다.");
       return;
     }
 
     if (member.role === "admin") {
-      showMessage("愿由ъ옄??異붾갑?????놁뒿?덈떎.");
+      showMessage("관리자는 추방할 수 없습니다.");
       return;
     }
 
     const memberName = getMemberName(member);
 
-    const kickMessage = `${memberName}?섏씠 愿由ъ옄???섑빐 異붾갑?섏뿀?듬땲??`;
+    const kickMessage = `${memberName}님이 관리자에 의해 추방되었습니다.`;
 
     // 踰꾪듉???꾨Ⅸ 利됱떆 ?뚮젅?댁뼱 ?붾㈃??異붾갑 ?좏샇瑜?蹂대깄?덈떎.
     // DB ??젣 ?꾨즺瑜?湲곕떎由ъ? ?딆븘???뚮젅?댁뼱媛 諛붾줈 濡쒕퉬濡??대룞?⑸땲??
@@ -378,7 +378,7 @@
     }
 
     if (!deletedMember) {
-      showMessage("異붾갑 泥섎━???ㅽ뙣?덉뒿?덈떎. Supabase RLS?먯꽌 愿由ъ옄??room_members ??젣 沅뚰븳???뺤씤?댁＜?몄슂.");
+      showMessage("추방 처리에 실패했습니다. Supabase RLS에서 관리자의 room_members 삭제 권한을 확인해주세요.");
       return;
     }
 
@@ -404,7 +404,7 @@
       selectedUserIds = selectedUserIds.filter((userId) => userId !== member.user_id);
     }
 
-    showMessage(`${memberName}?섏쓣 異붾갑?덉뒿?덈떎.`, "success");
+    showMessage(`${memberName}님을 추방했습니다.`, "success");
     await loadMembers();
     await loadPrivateMessages();
   }
@@ -453,17 +453,17 @@
     clearMessage();
 
     const currentNickname = getProfileName(currentUser.id);
-    const nickname = window.prompt("???됰꽕?꾩쓣 ?낅젰?섏꽭??", currentNickname)?.trim();
+    const nickname = window.prompt("새 닉네임을 입력하세요.", currentNickname)?.trim();
 
     if (!nickname || nickname === currentNickname) return;
 
     if (nickname.length > 20) {
-      showMessage("?됰꽕?꾩? 20???댄븯濡??낅젰?댁＜?몄슂.");
+      showMessage("닉네임은 20자 이하로 입력해주세요.");
       return;
     }
 
     changeNicknameButton.disabled = true;
-    changeNicknameButton.textContent = "蹂寃?以?..";
+    changeNicknameButton.textContent = "변경 중...";
 
     const { data, error } = await supabaseClient
       .from("profiles")
@@ -488,7 +488,7 @@
     renderMembers();
     await loadGlobalMessages();
     await loadPrivateMessages();
-    showMessage("?됰꽕?꾩쓣 蹂寃쏀뻽?듬땲??", "success");
+    showMessage("닉네임을 변경했습니다.", "success");
   }
 
   async function sendNicknameUpdatedBroadcast(userId) {
@@ -536,8 +536,8 @@
       const deleteButton = document.createElement("button");
       deleteButton.className = "message-delete-button";
       deleteButton.type = "button";
-      deleteButton.textContent = "횞";
-      deleteButton.setAttribute("aria-label", "硫붿떆吏 ??젣");
+      deleteButton.textContent = "×";
+      deleteButton.setAttribute("aria-label", "메시지 삭제");
       deleteButton.addEventListener("click", () => deleteMessage(message.id));
       messageHeader.append(deleteButton);
     }
@@ -628,7 +628,7 @@
 
   function openImageViewer(imageContent) {
     imageViewerImg.src = imageContent.src;
-    imageViewerImg.alt = imageContent.name || "?뺣????ъ쭊";
+    imageViewerImg.alt = imageContent.name || "확대된 사진";
     imageViewer.classList.remove("is-hidden");
   }
 
@@ -641,11 +641,11 @@
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.addEventListener("error", () => reject(new Error("?대?吏瑜??쎌? 紐삵뻽?듬땲??")));
+      reader.addEventListener("error", () => reject(new Error("이미지를 읽지 못했습니다.")));
       reader.addEventListener("load", () => {
         const image = new Image();
 
-        image.addEventListener("error", () => reject(new Error("?대?吏瑜?遺덈윭?ㅼ? 紐삵뻽?듬땲??")));
+        image.addEventListener("error", () => reject(new Error("이미지를 불러오지 못했습니다.")));
         image.addEventListener("load", () => {
           const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
           const width = Math.max(1, Math.round(image.width * scale));
@@ -693,12 +693,12 @@
     }
 
     await loadProfiles((data || []).map((message) => message.sender_id));
-    renderMessages(globalMessageList, data || [], "?꾩쭅 ?꾩껜 硫붿떆吏媛 ?놁뒿?덈떎.");
+    renderMessages(globalMessageList, data || [], "아직 전체 메시지가 없습니다.");
   }
 
   function renderPrivateChatPanels() {
     if (!selectedUserIds.length) {
-      privateChatGrid.innerHTML = '<p class="empty-state">媛쒖씤 梨꾪똿???좏깮?댁＜?몄슂.</p>';
+      privateChatGrid.innerHTML = '<p class="empty-state">개인 채팅을 선택해주세요.</p>';
       return;
     }
 
@@ -718,14 +718,14 @@
       const closeButton = document.createElement("button");
       closeButton.className = "message-delete-button";
       closeButton.type = "button";
-      closeButton.textContent = "횞";
-      closeButton.setAttribute("aria-label", "媛쒖씤 梨꾪똿 ?リ린");
+      closeButton.textContent = "×";
+      closeButton.setAttribute("aria-label", "개인 채팅 닫기");
       closeButton.addEventListener("click", () => closePrivateChat(userId));
 
       const lockButton = document.createElement("button");
       lockButton.className = "private-lock-button";
       lockButton.type = "button";
-      lockButton.textContent = lockedPrivateUserIds.has(userId) ? "?좉툑 ?댁젣" : "?좉툑";
+      lockButton.textContent = lockedPrivateUserIds.has(userId) ? "잠금 해제" : "잠금";
       lockButton.classList.toggle("is-locked", lockedPrivateUserIds.has(userId));
       lockButton.addEventListener("click", () => togglePrivateChatLock(userId));
 
@@ -733,7 +733,7 @@
 
       const messageList = document.createElement("div");
       messageList.className = "message-list private-message-list private-slot-message-list";
-      messageList.innerHTML = '<p class="empty-state">媛쒖씤 梨꾪똿??遺덈윭?ㅻ뒗 以묒엯?덈떎.</p>';
+      messageList.innerHTML = '<p class="empty-state">개인 채팅을 불러오는 중입니다.</p>';
 
       const form = document.createElement("form");
       form.className = "message-form private-slot-form";
@@ -741,14 +741,14 @@
       const textarea = document.createElement("textarea");
       textarea.className = "chat-textarea";
       textarea.name = "content";
-      textarea.placeholder = "媛쒖씤 硫붿떆吏 ?낅젰";
+      textarea.placeholder = "개인 메시지 입력";
       textarea.maxLength = 500;
       textarea.rows = 2;
       textarea.addEventListener("keydown", submitFormOnEnter);
 
       const imageButton = document.createElement("label");
       imageButton.className = "image-upload-button";
-      imageButton.textContent = "?ъ쭊";
+      imageButton.textContent = "사진";
 
       const imageInput = document.createElement("input");
       imageInput.type = "file";
@@ -761,7 +761,7 @@
       const sendButton = document.createElement("button");
       sendButton.className = "primary-button";
       sendButton.type = "submit";
-      sendButton.textContent = "?꾩넚";
+      sendButton.textContent = "전송";
 
       const preview = document.createElement("div");
       preview.className = "image-preview is-hidden";
@@ -799,7 +799,7 @@
 
     renderPrivateChatPanels();
     await sendPrivateChatLockBroadcast(userId, shouldLock);
-    showMessage(`${getProfileName(userId)}?섏쓽 媛쒖씤 梨꾪똿??${shouldLock ? "?좉툑" : "?좉툑 ?댁젣"}?덉뒿?덈떎.`, "success");
+    showMessage(`${getProfileName(userId)}님의 개인 채팅을 ${shouldLock ? "잠금" : "잠금 해제"}했습니다.`, "success");
   }
 
   function getPrivateChatPanel(userId) {
@@ -942,7 +942,7 @@
     }
 
     await loadProfiles((data || []).map((message) => message.sender_id));
-    renderMessages(messageList, data || [], "?꾩쭅 媛쒖씤 硫붿떆吏媛 ?놁뒿?덈떎.");
+    renderMessages(messageList, data || [], "아직 개인 메시지가 없습니다.");
   }
 
   async function deleteMessage(messageId) {
@@ -1043,7 +1043,7 @@
 
     if (imageFile && imageFile.size) {
       if (!imageFile.type.startsWith("image/")) {
-        showMessage("?대?吏 ?뚯씪留?蹂대궪 ???덉뒿?덈떎.");
+        showMessage("이미지 파일만 보낼 수 있습니다.");
         return;
       }
 
@@ -1087,7 +1087,7 @@
     dataTransfer.items.add(file);
     imageInput.files = dataTransfer.files;
     renderGlobalImagePreview(file);
-    showMessage(`${sourceLabel}???ъ쭊???좏깮?섏뿀?듬땲?? ?꾩넚 踰꾪듉???뚮윭 蹂대궡?몄슂.`, "success");
+    showMessage(`${sourceLabel}한 사진이 선택되었습니다. 전송 버튼을 눌러 보내세요.`, "success");
     return true;
   }
 
@@ -1164,12 +1164,12 @@
   async function clearGlobalChat() {
     clearMessage();
 
-    const ok = window.confirm("?꾩껜 梨꾪똿??紐⑤몢 ??젣?좉퉴??");
+    const ok = window.confirm("전체 채팅을 모두 삭제할까요?");
 
     if (!ok) return;
 
     clearGlobalChatButton.disabled = true;
-    clearGlobalChatButton.textContent = "??젣 以?..";
+    clearGlobalChatButton.textContent = "삭제 중...";
 
     const { error } = await supabaseClient
       .from("messages")
@@ -1178,7 +1178,7 @@
       .eq("message_type", "global");
 
     clearGlobalChatButton.disabled = false;
-    clearGlobalChatButton.textContent = "?꾩껜 梨꾪똿 ??젣";
+    clearGlobalChatButton.textContent = "전체 채팅 삭제";
 
     if (error) {
       showMessage(getFriendlyError(error));
@@ -1186,8 +1186,8 @@
     }
 
     await sendChatClearedBroadcast();
-    globalMessageList.innerHTML = '<p class="empty-state">?꾩쭅 ?꾩껜 硫붿떆吏媛 ?놁뒿?덈떎.</p>';
-    showMessage("?꾩껜 梨꾪똿????젣?덉뒿?덈떎.", "success");
+    globalMessageList.innerHTML = '<p class="empty-state">아직 전체 메시지가 없습니다.</p>';
+    showMessage("전체 채팅을 삭제했습니다.", "success");
   }
 
   async function sendChatClearedBroadcast() {
@@ -1234,7 +1234,7 @@
     clearMessage();
 
     const confirmed = window.confirm(
-      "諛⑹쓣 ?쒓굅?섎㈃ ?꾩껜 梨꾪똿, 媛쒖씤 梨꾪똿, 硫붾え???댁슜, ?묒냽 以묒씤 ?뚮젅?댁뼱???ъ쭊 蹂닿??⑥씠 ??젣?⑸땲?? 怨꾩냽?좉퉴??"
+      "방을 제거하면 전체 채팅, 개인 채팅, 메모장 내용, 접속 중인 플레이어의 사진 보관함이 삭제됩니다. 계속할까요?"
     );
 
     if (!confirmed) return;
@@ -1273,7 +1273,7 @@
     clearMessage();
 
     if (!receiverId) {
-      showMessage("媛쒖씤 硫붿떆吏瑜?蹂대궪 李멸??먮? ?좏깮?댁＜?몄슂.");
+      showMessage("개인 메시지를 보낼 참가자를 선택해주세요.");
       return;
     }
 
@@ -1288,7 +1288,7 @@
 
     if (imageFile && imageFile.size) {
       if (!imageFile.type.startsWith("image/")) {
-        showMessage("?대?吏 ?뚯씪留?蹂대궪 ???덉뒿?덈떎.");
+        showMessage("이미지 파일만 보낼 수 있습니다.");
         return;
       }
 
@@ -1498,7 +1498,7 @@
 
   async function initAdmin() {
     if (!supabaseClient) {
-      showMessage("Supabase ?ㅼ젙??遺덈윭?ㅼ? 紐삵뻽?듬땲??");
+      showMessage("Supabase 설정을 불러오지 못했습니다.");
       return;
     }
 
