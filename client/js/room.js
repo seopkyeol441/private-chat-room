@@ -32,6 +32,9 @@
   const imageViewer = document.querySelector("#image-viewer");
   const imageViewerImg = document.querySelector("#image-viewer-img");
   const imageViewerClose = document.querySelector("#image-viewer-close");
+  const kickAlert = document.querySelector("#kick-alert");
+  const kickAlertMessage = document.querySelector("#kick-alert-message");
+  const kickAlertConfirm = document.querySelector("#kick-alert-confirm");
   const closeNoteButton = document.querySelector("#close-note-button");
   const privateNote = document.querySelector("#private-note");
   const saveNoteButton = document.querySelector("#save-note-button");
@@ -294,18 +297,21 @@
     hasBeenKicked = true;
     currentMember = null;
 
-    await loadGlobalMessages();
     showMessage(message);
     sessionStorage.setItem("lobbyFlashMessage", message);
     sessionStorage.setItem("lobbyFlashType", "error");
     globalMessageForm.classList.add("is-disabled");
     privateMessageForm.classList.add("is-disabled");
     leaveRoomButton.disabled = true;
+    showKickAlert(message);
 
-    window.setTimeout(() => {
-      window.alert(message);
-      moveToLobby();
-    }, 50);
+    loadGlobalMessages();
+  }
+
+  function showKickAlert(message) {
+    kickAlertMessage.textContent = message;
+    kickAlert.classList.remove("is-hidden");
+    kickAlertConfirm.focus();
   }
 
   async function checkCurrentMembership() {
@@ -331,7 +337,7 @@
   function startMembershipCheck() {
     if (membershipCheckTimer) return;
 
-    membershipCheckTimer = window.setInterval(checkCurrentMembership, 1500);
+    membershipCheckTimer = window.setInterval(checkCurrentMembership, 500);
   }
 
   function renderMemberList() {
@@ -1689,6 +1695,7 @@
       closeImageViewer();
     }
   });
+  kickAlertConfirm.addEventListener("click", moveToLobby);
   changeNicknameButton.addEventListener("click", changeNickname);
   closeNoteButton.addEventListener("click", closePrivateNote);
   noteWindowHeader.addEventListener("pointerdown", startDraggingNote);

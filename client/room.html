@@ -166,6 +166,16 @@
         </button>
         <img id="image-viewer-img" alt="확대된 사진" />
       </div>
+
+      <div class="kick-alert is-hidden" id="kick-alert" role="alertdialog" aria-modal="true" aria-labelledby="kick-alert-title">
+        <section class="kick-alert-box">
+          <h2 id="kick-alert-title">방에서 추방되었습니다</h2>
+          <p id="kick-alert-message">관리자에 의해 방에서 추방되었습니다.</p>
+          <button class="primary-button" id="kick-alert-confirm" type="button">
+            확인
+          </button>
+        </section>
+      </div>
     </main>
 
     <!-- Supabase SDK와 공통 클라이언트를 먼저 불러온 뒤 방 기능을 실행합니다. -->

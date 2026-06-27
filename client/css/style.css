@@ -1070,6 +1070,37 @@ textarea {
   line-height: 1;
 }
 
+.kick-alert {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 18, 26, 0.72);
+}
+
+.kick-alert-box {
+  width: min(420px, 100%);
+  padding: 24px;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.kick-alert-box h2 {
+  margin: 0 0 10px;
+  color: #17202a;
+  font-size: 24px;
+}
+
+.kick-alert-box p {
+  margin: 0 0 18px;
+  color: #526170;
+  line-height: 1.5;
+}
+
 .note-window-header {
   cursor: move;
   user-select: none;
