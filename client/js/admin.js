@@ -383,13 +383,28 @@
     const isMine = message.sender_id === currentUser.id;
     item.className = `chat-message${isMine ? " is-mine" : ""}`;
 
+    const messageHeader = document.createElement("div");
+    messageHeader.className = "message-header";
+
     const author = document.createElement("strong");
     author.textContent = isMine ? "나" : getProfileName(message.sender_id);
+
+    messageHeader.append(author);
+
+    if (isMine) {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "message-delete-button";
+      deleteButton.type = "button";
+      deleteButton.textContent = "×";
+      deleteButton.setAttribute("aria-label", "메시지 삭제");
+      deleteButton.addEventListener("click", () => deleteMessage(message.id));
+      messageHeader.append(deleteButton);
+    }
 
     const content = document.createElement("p");
     content.textContent = message.content;
 
-    item.append(author, content);
+    item.append(messageHeader, content);
     return item;
   }
 
@@ -446,6 +461,25 @@
 
     await loadProfiles((data || []).map((message) => message.sender_id));
     renderMessages(privateMessageList, data || [], "아직 개인 메시지가 없습니다.");
+  }
+
+  async function deleteMessage(messageId) {
+    clearMessage();
+
+    const { error } = await supabaseClient
+      .from("messages")
+      .delete()
+      .eq("id", messageId)
+      .eq("room_id", roomId)
+      .eq("sender_id", currentUser.id);
+
+    if (error) {
+      showMessage(getFriendlyError(error));
+      return;
+    }
+
+    await loadGlobalMessages();
+    await loadPrivateMessages();
   }
 
   async function sendGlobalMessage(event) {

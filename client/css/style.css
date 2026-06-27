@@ -455,11 +455,38 @@ textarea {
   background: #eaf7f4;
 }
 
-.chat-message strong {
-  display: block;
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 5px;
+}
+
+.chat-message strong {
   color: #1f7a6d;
   font-size: 13px;
+}
+
+.message-delete-button {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 999px;
+  color: #7a8795;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.message-delete-button:hover {
+  color: #a83232;
+  background: #ffe8e8;
 }
 
 .chat-message p {
