@@ -1322,3 +1322,44 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+.admin-page.room-page {
+  position: fixed;
+  inset: 0;
+  left: 50%;
+  width: min(100%, 1180px);
+  height: 100dvh;
+  overflow: hidden;
+  transform: translateX(-50%);
+}
+
+.admin-page .admin-layout {
+  overflow: hidden;
+}
+
+.admin-page .admin-private-chat-grid {
+  overflow: auto;
+}
+
+@media (max-width: 760px) {
+  .admin-page.room-page {
+    height: 100dvh;
+    overflow: hidden;
+    padding: 10px;
+  }
+
+  .admin-page .room-header {
+    max-height: 34dvh;
+    overflow-y: auto;
+  }
+
+  .admin-page .admin-layout {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .admin-page .admin-private-chat-grid {
+    overflow: auto;
+  }
+}
