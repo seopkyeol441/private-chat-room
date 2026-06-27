@@ -37,6 +37,7 @@
   let presenceChannel = null;
   let kickChannel = null;
   let chatActionsChannel = null;
+  let chatActionsChannelReady = false;
   let onlineUserIds = new Set();
   let noteWindowPosition = null;
   let hasBeenKicked = false;
@@ -487,8 +488,40 @@
       return;
     }
 
+    await sendMessageDeletedBroadcast(messageId);
     await loadGlobalMessages();
     await loadPrivateMessages();
+  }
+
+  async function sendMessageDeletedBroadcast(messageId) {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "message-deleted",
+      payload: {
+        room_id: roomId,
+        message_id: messageId,
+        deleted_by: currentUser.id,
+        deleted_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Room message deleted broadcast response:", response);
+  }
+
+  async function waitForChatActionsChannel() {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      if (chatActionsChannelReady) return true;
+      await new Promise((resolve) => window.setTimeout(resolve, 50));
+    }
+
+    console.warn("Room chat actions broadcast channel is not ready yet.");
+    return false;
   }
 
   async function sendGlobalMessage(event) {
@@ -825,8 +858,20 @@
 
         await loadGlobalMessages();
       })
+      .on("broadcast", { event: "message-deleted" }, async ({ payload }) => {
+        console.log("Room message deleted broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        await loadGlobalMessages();
+        await loadPrivateMessages();
+      })
       .subscribe((status, error) => {
         console.log("Room chat actions broadcast status:", status);
+
+        if (status === "SUBSCRIBED") {
+          chatActionsChannelReady = true;
+        }
 
         if (error) {
           console.error("Room chat actions broadcast error:", error);
@@ -863,6 +908,7 @@
     if (chatActionsChannel) {
       supabaseClient.removeChannel(chatActionsChannel);
       chatActionsChannel = null;
+      chatActionsChannelReady = false;
       console.log("Room chat actions broadcast channel removed");
     }
   }

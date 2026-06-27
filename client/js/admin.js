@@ -478,8 +478,30 @@
       return;
     }
 
+    await sendMessageDeletedBroadcast(messageId);
     await loadGlobalMessages();
     await loadPrivateMessages();
+  }
+
+  async function sendMessageDeletedBroadcast(messageId) {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "message-deleted",
+      payload: {
+        room_id: roomId,
+        message_id: messageId,
+        deleted_by: currentUser.id,
+        deleted_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Admin message deleted broadcast response:", response);
   }
 
   async function sendGlobalMessage(event) {
@@ -693,6 +715,14 @@
         if (payload?.room_id !== roomId) return;
 
         await loadGlobalMessages();
+      })
+      .on("broadcast", { event: "message-deleted" }, async ({ payload }) => {
+        console.log("Admin message deleted broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        await loadGlobalMessages();
+        await loadPrivateMessages();
       })
       .subscribe((status, error) => {
         console.log("Admin chat actions broadcast status:", status);
