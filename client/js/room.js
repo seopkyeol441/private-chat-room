@@ -23,6 +23,8 @@
   const toggleNoteButton = document.querySelector("#toggle-note-button");
   const toggleGalleryButton = document.querySelector("#toggle-gallery-button");
   const galleryBody = document.querySelector("#gallery-body");
+  const galleryWindowHeader = document.querySelector("#gallery-window-header");
+  const galleryResizeHandle = document.querySelector("#gallery-resize-handle");
   const galleryList = document.querySelector("#gallery-list");
   const closeGalleryButton = document.querySelector("#close-gallery-button");
   const closeNoteButton = document.querySelector("#close-note-button");
@@ -47,6 +49,7 @@
   let chatActionsChannelReady = false;
   let onlineUserIds = new Set();
   let noteWindowPosition = null;
+  let galleryWindowPosition = null;
   let hasBeenKicked = false;
 
   function showMessage(message, type = "error") {
@@ -640,6 +643,7 @@
 
     if (shouldOpen) {
       renderGallery();
+      placeGalleryWindow();
     }
 
     galleryBody.classList.toggle("is-hidden", !shouldOpen);
@@ -1307,6 +1311,95 @@
     window.addEventListener("pointerup", stopResizingNote);
   }
 
+  function placeGalleryWindow() {
+    if (galleryWindowPosition) return;
+
+    const rect = galleryBody.getBoundingClientRect();
+    const x = Math.max(16, window.innerWidth - rect.width - 24);
+    const y = 82;
+
+    galleryWindowPosition = { x, y };
+    galleryBody.style.left = `${x}px`;
+    galleryBody.style.top = `${y}px`;
+    galleryBody.style.right = "auto";
+  }
+
+  function keepGalleryWindowInViewport() {
+    if (!galleryWindowPosition || galleryBody.classList.contains("is-hidden")) return;
+
+    const rect = galleryBody.getBoundingClientRect();
+    const x = clamp(rect.left, 8, Math.max(8, window.innerWidth - rect.width - 8));
+    const y = clamp(rect.top, 8, Math.max(8, window.innerHeight - rect.height - 8));
+
+    galleryWindowPosition = { x, y };
+    galleryBody.style.left = `${x}px`;
+    galleryBody.style.top = `${y}px`;
+  }
+
+  function startDraggingGallery(event) {
+    if (event.target.closest("button")) return;
+
+    event.preventDefault();
+    placeGalleryWindow();
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const rect = galleryBody.getBoundingClientRect();
+
+    function moveGallery(moveEvent) {
+      const nextX = clamp(
+        rect.left + moveEvent.clientX - startX,
+        8,
+        Math.max(8, window.innerWidth - rect.width - 8)
+      );
+      const nextY = clamp(
+        rect.top + moveEvent.clientY - startY,
+        8,
+        Math.max(8, window.innerHeight - rect.height - 8)
+      );
+
+      galleryWindowPosition = { x: nextX, y: nextY };
+      galleryBody.style.left = `${nextX}px`;
+      galleryBody.style.top = `${nextY}px`;
+      galleryBody.style.right = "auto";
+    }
+
+    function stopDraggingGallery() {
+      window.removeEventListener("pointermove", moveGallery);
+      window.removeEventListener("pointerup", stopDraggingGallery);
+    }
+
+    window.addEventListener("pointermove", moveGallery);
+    window.addEventListener("pointerup", stopDraggingGallery);
+  }
+
+  function startResizingGallery(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    placeGalleryWindow();
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const rect = galleryBody.getBoundingClientRect();
+
+    function resizeGallery(moveEvent) {
+      const nextWidth = clamp(rect.width + moveEvent.clientX - startX, 320, window.innerWidth - rect.left - 8);
+      const nextHeight = clamp(rect.height + moveEvent.clientY - startY, 300, window.innerHeight - rect.top - 8);
+
+      galleryBody.style.width = `${nextWidth}px`;
+      galleryBody.style.height = `${nextHeight}px`;
+    }
+
+    function stopResizingGallery() {
+      window.removeEventListener("pointermove", resizeGallery);
+      window.removeEventListener("pointerup", stopResizingGallery);
+      keepGalleryWindowInViewport();
+    }
+
+    window.addEventListener("pointermove", resizeGallery);
+    window.addEventListener("pointerup", stopResizingGallery);
+  }
+
   function subscribeRealtime() {
     messagesChannel = supabaseClient
       .channel(`room-messages-${roomId}`)
@@ -1531,6 +1624,8 @@
   toggleNoteButton.addEventListener("click", togglePrivateNote);
   toggleGalleryButton.addEventListener("click", toggleGallery);
   closeGalleryButton.addEventListener("click", closeGallery);
+  galleryWindowHeader.addEventListener("pointerdown", startDraggingGallery);
+  galleryResizeHandle.addEventListener("pointerdown", startResizingGallery);
   galleryList.addEventListener("dragover", handleGalleryDragOver);
   galleryList.addEventListener("dragleave", handleGalleryDragLeave);
   galleryList.addEventListener("drop", handleGalleryDrop);
@@ -1543,6 +1638,7 @@
   leaveRoomButton.addEventListener("click", moveToLobby);
   window.addEventListener("beforeunload", cleanupRealtime);
   window.addEventListener("resize", keepNoteWindowInViewport);
+  window.addEventListener("resize", keepGalleryWindowInViewport);
 
   initRoom();
 })();

@@ -922,15 +922,23 @@ textarea {
   right: 24px;
   z-index: 22;
   width: min(520px, calc(100vw - 32px));
+  height: min(600px, calc(100vh - 120px));
   max-height: min(640px, calc(100vh - 120px));
+  resize: both;
   overflow: hidden;
+}
+
+.gallery-window-header {
+  cursor: move;
+  user-select: none;
 }
 
 .gallery-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  min-height: 220px;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -1085,7 +1093,9 @@ textarea {
   .gallery-popover {
     position: static;
     width: 100%;
+    height: 420px;
     max-height: none;
+    resize: vertical;
   }
 
   .gallery-list {
