@@ -568,6 +568,7 @@ textarea {
 
 .chat-message p {
   margin: 0;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
   color: #17202a;
   line-height: 1.45;
