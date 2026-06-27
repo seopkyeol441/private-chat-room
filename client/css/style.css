@@ -332,7 +332,7 @@ textarea {
   margin: 0 auto;
   height: 100vh;
   overflow: hidden;
-  padding: 18px 16px 28px;
+  padding: 14px 16px 36px;
 }
 
 .room-header {
@@ -389,7 +389,7 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
-  height: calc(100vh - 142px);
+  height: calc(100vh - 132px);
   min-height: 0;
 }
 
@@ -541,25 +541,28 @@ textarea {
 }
 
 .header-member-panel {
-  width: min(44vw, 430px);
-  min-width: 260px;
-  padding: 10px 12px;
+  width: min(46vw, 500px);
+  min-width: 300px;
+  padding: 8px 10px;
   border: 1px solid rgba(23, 32, 42, 0.08);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.72);
 }
 
 .header-member-panel h2 {
-  margin: 0 0 8px;
-  font-size: 15px;
+  margin: 0 0 6px;
+  font-size: 13px;
 }
 
 .header-member-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  max-height: 70px;
-  overflow-y: auto;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-height: 34px;
+  max-height: 34px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
 }
 
 .member-item {
@@ -574,13 +577,31 @@ textarea {
 }
 
 .header-member-list .member-item {
-  gap: 7px;
-  padding: 7px 9px;
+  flex: 0 0 auto;
+  gap: 6px;
+  min-width: 132px;
+  max-width: 178px;
+  padding: 6px 8px;
 }
 
 .header-member-list .member-item strong,
 .header-member-list .member-item span {
-  font-size: 12px;
+  font-size: 11px;
+}
+
+.header-member-list .member-row {
+  min-width: 190px;
+  max-width: 240px;
+}
+
+.header-member-list .member-select-button {
+  padding: 4px 5px;
+}
+
+.header-member-list .kick-button {
+  min-height: 28px;
+  padding: 0 7px;
+  font-size: 11px;
 }
 
 .member-button {
@@ -782,7 +803,10 @@ textarea {
   }
 
   .header-member-list {
+    flex-wrap: wrap;
     max-height: none;
+    overflow-x: visible;
+    overflow-y: visible;
   }
 
   .note-popover {
