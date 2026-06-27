@@ -77,6 +77,10 @@
     window.location.href = `./room.html?roomId=${encodeURIComponent(roomId)}`;
   }
 
+  function moveToAdmin(roomId) {
+    window.location.href = `./admin.html?roomId=${encodeURIComponent(roomId)}`;
+  }
+
   // lobby.html은 로그인 사용자만 접근할 수 있으므로 세션이 없으면 로그인 화면으로 보냅니다.
   async function requireLogin() {
     const {
@@ -177,7 +181,7 @@
     renderRooms(data || []);
   }
 
-  // 방 생성 후 만든 사용자를 room_members에 admin으로 추가하고 바로 방으로 이동합니다.
+  // 방 생성 후 만든 사용자를 room_members에 admin으로 추가하고 바로 관리자 화면으로 이동합니다.
   async function createRoom(event) {
     event.preventDefault();
     clearMessage();
@@ -224,7 +228,7 @@
       return;
     }
 
-    moveToRoom(room.id);
+    moveToAdmin(room.id);
   }
 
   // 이미 참여한 방인지 먼저 확인합니다. 참여 중이면 중복 insert 없이 바로 이동합니다.
