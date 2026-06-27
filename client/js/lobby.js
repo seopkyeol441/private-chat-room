@@ -235,7 +235,7 @@
   async function getExistingMembership(roomId) {
     const { data, error } = await supabaseClient
       .from("room_members")
-      .select("id")
+      .select("id, role")
       .eq("room_id", roomId)
       .eq("user_id", currentUser.id)
       .maybeSingle();
@@ -269,7 +269,12 @@
       const existingMembership = await getExistingMembership(roomId);
 
       if (existingMembership) {
-        moveToRoom(roomId);
+        if (existingMembership.role === "admin") {
+          moveToAdmin(roomId);
+        } else {
+          moveToRoom(roomId);
+        }
+
         return;
       }
 
