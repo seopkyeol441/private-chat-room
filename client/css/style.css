@@ -1354,12 +1354,14 @@ textarea {
 
 .admin-page.room-page {
   position: fixed;
-  inset: 0;
-  left: 50%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: min(100%, 1180px);
   height: 100dvh;
+  margin: 0 auto;
   overflow: hidden;
-  transform: translateX(-50%);
 }
 
 .admin-page .admin-layout {
