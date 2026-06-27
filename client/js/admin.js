@@ -575,12 +575,12 @@
           },
         },
       })
-      .on("presence", { event: "sync" }, () => {
+      .on("presence", { event: "sync" }, async () => {
         const presenceState = presenceChannel.presenceState();
         onlineUserIds = new Set(Object.keys(presenceState));
 
         console.log("Admin presence online users:", [...onlineUserIds]);
-        renderMembers();
+        await loadMembers();
       })
       .on("presence", { event: "join" }, ({ key }) => {
         console.log("Admin presence joined:", key);

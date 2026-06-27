@@ -735,13 +735,12 @@
           },
         },
       })
-      .on("presence", { event: "sync" }, () => {
+      .on("presence", { event: "sync" }, async () => {
         const presenceState = presenceChannel.presenceState();
         onlineUserIds = new Set(Object.keys(presenceState));
 
         console.log("Room presence online users:", [...onlineUserIds]);
-        renderMemberList();
-        renderPrivateChatSelector();
+        await loadMembers();
       })
       .on("presence", { event: "join" }, ({ key }) => {
         console.log("Room presence joined:", key);
