@@ -640,12 +640,12 @@
   function toggleGallery() {
     const shouldOpen = galleryBody.classList.contains("is-hidden");
 
+    galleryBody.classList.toggle("is-hidden", !shouldOpen);
+
     if (shouldOpen) {
       renderGallery();
       placeGalleryWindow();
     }
-
-    galleryBody.classList.toggle("is-hidden", !shouldOpen);
   }
 
   function closeGallery() {
@@ -1311,11 +1311,15 @@
   }
 
   function placeGalleryWindow() {
-    if (galleryWindowPosition) return;
-
     const rect = galleryBody.getBoundingClientRect();
-    const x = Math.max(16, window.innerWidth - rect.width - 24);
-    const y = 82;
+    const width = rect.width || Math.min(520, window.innerWidth - 32);
+    const height = rect.height || Math.min(600, window.innerHeight - 120);
+    const x = galleryWindowPosition
+      ? clamp(galleryWindowPosition.x, 8, Math.max(8, window.innerWidth - width - 8))
+      : Math.max(16, window.innerWidth - width - 24);
+    const y = galleryWindowPosition
+      ? clamp(galleryWindowPosition.y, 8, Math.max(8, window.innerHeight - height - 8))
+      : 82;
 
     galleryWindowPosition = { x, y };
     galleryBody.style.left = `${x}px`;
