@@ -265,7 +265,11 @@
     globalMessageForm.classList.add("is-disabled");
     privateMessageForm.classList.add("is-disabled");
     leaveRoomButton.disabled = true;
-    window.setTimeout(moveToLobby, 900);
+
+    window.setTimeout(() => {
+      window.alert(message);
+      moveToLobby();
+    }, 50);
   }
 
   function renderMemberList() {
