@@ -13,6 +13,7 @@
   const globalMessageForm = document.querySelector("#global-message-form");
   const globalImagePreview = document.querySelector("#global-image-preview");
   const privateMessageForm = document.querySelector("#private-message-form");
+  const privateImagePreview = document.querySelector("#private-image-preview");
   const participantList = document.querySelector("#participant-list");
   const memberList = document.querySelector("#member-list");
   const privateChatDescription = document.querySelector("#private-chat-description");
@@ -828,6 +829,93 @@
     }
   }
 
+  function getPrivateImageInput() {
+    return privateMessageForm.querySelector('input[name="image"]');
+  }
+
+  function setPrivateImageFile(file, sourceLabel) {
+    if (!file || !file.type.startsWith("image/")) return false;
+
+    const imageInput = getPrivateImageInput();
+    const dataTransfer = new DataTransfer();
+
+    dataTransfer.items.add(file);
+    imageInput.files = dataTransfer.files;
+    renderPrivateImagePreview(file);
+    showMessage(`${sourceLabel}한 사진이 선택되었습니다. 전송 버튼을 눌러 보내세요.`, "success");
+    return true;
+  }
+
+  function renderPrivateImagePreview(file) {
+    const previewUrl = URL.createObjectURL(file);
+
+    privateImagePreview.innerHTML = "";
+    privateImagePreview.classList.remove("is-hidden");
+
+    const image = document.createElement("img");
+    image.src = previewUrl;
+    image.alt = "전송할 사진 미리보기";
+    image.addEventListener("load", () => URL.revokeObjectURL(previewUrl), { once: true });
+
+    const info = document.createElement("span");
+    info.textContent = `${file.name || "붙여넣은 사진"} 선택됨`;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "제거";
+    removeButton.addEventListener("click", clearPrivateImageSelection);
+
+    privateImagePreview.append(image, info, removeButton);
+  }
+
+  function clearPrivateImagePreview() {
+    privateImagePreview.innerHTML = "";
+    privateImagePreview.classList.add("is-hidden");
+  }
+
+  function clearPrivateImageSelection() {
+    getPrivateImageInput().value = "";
+    clearPrivateImagePreview();
+  }
+
+  function handlePrivateImageChange(event) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      renderPrivateImagePreview(file);
+    } else {
+      clearPrivateImagePreview();
+    }
+  }
+
+  function handlePrivatePaste(event) {
+    const file = [...(event.clipboardData?.files || [])].find((item) => item.type.startsWith("image/"));
+
+    if (setPrivateImageFile(file, "붙여넣기")) {
+      event.preventDefault();
+    }
+  }
+
+  function handlePrivateDragOver(event) {
+    event.preventDefault();
+    privateMessageList.classList.add("is-drag-over");
+  }
+
+  function handlePrivateDragLeave() {
+    privateMessageList.classList.remove("is-drag-over");
+  }
+
+  function handlePrivateDrop(event) {
+    event.preventDefault();
+    privateMessageList.classList.remove("is-drag-over");
+
+    const file = [...(event.dataTransfer?.files || [])].find((item) => item.type.startsWith("image/"));
+
+    if (!setPrivateImageFile(file, "드래그")) {
+      showMessage("이미지 파일만 드래그해서 넣을 수 있습니다.");
+    }
+  }
+
   async function sendPrivateMessage(event) {
     event.preventDefault();
     clearMessage();
@@ -839,15 +927,33 @@
 
     const formData = new FormData(privateMessageForm);
     const content = formData.get("content").trim();
+    const imageFile = formData.get("image");
 
-    if (!content) return;
+    if (!content && (!imageFile || !imageFile.size)) return;
+
+    let messageContent = content;
+
+    if (imageFile && imageFile.size) {
+      if (!imageFile.type.startsWith("image/")) {
+        showMessage("이미지 파일만 보낼 수 있습니다.");
+        return;
+      }
+
+      const imageDataUrl = await resizeImageFile(imageFile);
+      messageContent = JSON.stringify({
+        kind: "image",
+        src: imageDataUrl,
+        name: imageFile.name,
+        text: content,
+      });
+    }
 
     const { error } = await supabaseClient.from("messages").insert({
       room_id: roomId,
       sender_id: currentUser.id,
       receiver_id: selectedPrivateUserId,
       message_type: "private",
-      content,
+      content: messageContent,
     });
 
     if (error) {
@@ -857,6 +963,7 @@
 
     await sendMessageSentBroadcast("private");
     privateMessageForm.reset();
+    clearPrivateImagePreview();
   }
 
   async function loadPrivateNote() {
@@ -1242,6 +1349,11 @@
   globalMessageList.addEventListener("dragleave", handleGlobalDragLeave);
   globalMessageList.addEventListener("drop", handleGlobalDrop);
   privateMessageForm.addEventListener("submit", sendPrivateMessage);
+  getPrivateImageInput().addEventListener("change", handlePrivateImageChange);
+  privateMessageForm.addEventListener("paste", handlePrivatePaste);
+  privateMessageList.addEventListener("dragover", handlePrivateDragOver);
+  privateMessageList.addEventListener("dragleave", handlePrivateDragLeave);
+  privateMessageList.addEventListener("drop", handlePrivateDrop);
   toggleNoteButton.addEventListener("click", togglePrivateNote);
   changeNicknameButton.addEventListener("click", changeNickname);
   closeNoteButton.addEventListener("click", closePrivateNote);

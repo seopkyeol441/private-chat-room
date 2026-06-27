@@ -641,15 +641,34 @@
       textarea.placeholder = "개인 메시지 입력";
       textarea.maxLength = 500;
       textarea.rows = 2;
-      textarea.required = true;
+
+      const imageButton = document.createElement("label");
+      imageButton.className = "image-upload-button";
+      imageButton.textContent = "사진";
+
+      const imageInput = document.createElement("input");
+      imageInput.type = "file";
+      imageInput.name = "image";
+      imageInput.accept = "image/*";
+      imageInput.addEventListener("change", (event) => handlePrivateImageChange(event, userId));
+
+      imageButton.append(imageInput);
 
       const sendButton = document.createElement("button");
       sendButton.className = "primary-button";
       sendButton.type = "submit";
       sendButton.textContent = "전송";
 
-      form.append(textarea, sendButton);
+      const preview = document.createElement("div");
+      preview.className = "image-preview is-hidden";
+      preview.dataset.userId = userId;
+
+      form.append(textarea, imageButton, sendButton, preview);
       form.addEventListener("submit", (event) => sendPrivateMessage(event, userId));
+      form.addEventListener("paste", (event) => handlePrivatePaste(event, userId));
+      messageList.addEventListener("dragover", handlePrivateDragOver);
+      messageList.addEventListener("dragleave", handlePrivateDragLeave);
+      messageList.addEventListener("drop", (event) => handlePrivateDrop(event, userId));
 
       panel.append(header, messageList, form);
       privateChatGrid.append(panel);
@@ -661,6 +680,111 @@
   function closePrivateChat(userId) {
     selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
     updateSelectedParticipant();
+  }
+
+  function getPrivateChatPanel(userId) {
+    return privateChatGrid.querySelector(`.private-chat-slot[data-user-id="${userId}"]`);
+  }
+
+  function getPrivateImageInput(userId) {
+    return getPrivateChatPanel(userId)?.querySelector('input[name="image"]');
+  }
+
+  function getPrivateImagePreview(userId) {
+    return getPrivateChatPanel(userId)?.querySelector(".image-preview");
+  }
+
+  function setPrivateImageFile(file, userId, sourceLabel) {
+    if (!file || !file.type.startsWith("image/")) return false;
+
+    const imageInput = getPrivateImageInput(userId);
+    const dataTransfer = new DataTransfer();
+
+    dataTransfer.items.add(file);
+    imageInput.files = dataTransfer.files;
+    renderPrivateImagePreview(file, userId);
+    showMessage(`${sourceLabel}한 사진이 선택되었습니다. 전송 버튼을 눌러 보내세요.`, "success");
+    return true;
+  }
+
+  function renderPrivateImagePreview(file, userId) {
+    const preview = getPrivateImagePreview(userId);
+    const previewUrl = URL.createObjectURL(file);
+
+    preview.innerHTML = "";
+    preview.classList.remove("is-hidden");
+
+    const image = document.createElement("img");
+    image.src = previewUrl;
+    image.alt = "전송할 사진 미리보기";
+    image.addEventListener("load", () => URL.revokeObjectURL(previewUrl), { once: true });
+
+    const info = document.createElement("span");
+    info.textContent = `${file.name || "붙여넣은 사진"} 선택됨`;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "제거";
+    removeButton.addEventListener("click", () => clearPrivateImageSelection(userId));
+
+    preview.append(image, info, removeButton);
+  }
+
+  function clearPrivateImagePreview(userId) {
+    const preview = getPrivateImagePreview(userId);
+
+    if (!preview) return;
+
+    preview.innerHTML = "";
+    preview.classList.add("is-hidden");
+  }
+
+  function clearPrivateImageSelection(userId) {
+    const imageInput = getPrivateImageInput(userId);
+
+    if (imageInput) {
+      imageInput.value = "";
+    }
+
+    clearPrivateImagePreview(userId);
+  }
+
+  function handlePrivateImageChange(event, userId) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      renderPrivateImagePreview(file, userId);
+    } else {
+      clearPrivateImagePreview(userId);
+    }
+  }
+
+  function handlePrivatePaste(event, userId) {
+    const file = [...(event.clipboardData?.files || [])].find((item) => item.type.startsWith("image/"));
+
+    if (setPrivateImageFile(file, userId, "붙여넣기")) {
+      event.preventDefault();
+    }
+  }
+
+  function handlePrivateDragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add("is-drag-over");
+  }
+
+  function handlePrivateDragLeave(event) {
+    event.currentTarget.classList.remove("is-drag-over");
+  }
+
+  function handlePrivateDrop(event, userId) {
+    event.preventDefault();
+    event.currentTarget.classList.remove("is-drag-over");
+
+    const file = [...(event.dataTransfer?.files || [])].find((item) => item.type.startsWith("image/"));
+
+    if (!setPrivateImageFile(file, userId, "드래그")) {
+      showMessage("이미지 파일만 드래그해서 넣을 수 있습니다.");
+    }
   }
 
   async function loadPrivateMessages() {
@@ -956,15 +1080,33 @@
     const form = event.currentTarget;
     const formData = new FormData(form);
     const content = formData.get("content").trim();
+    const imageFile = formData.get("image");
 
-    if (!content) return;
+    if (!content && (!imageFile || !imageFile.size)) return;
+
+    let messageContent = content;
+
+    if (imageFile && imageFile.size) {
+      if (!imageFile.type.startsWith("image/")) {
+        showMessage("이미지 파일만 보낼 수 있습니다.");
+        return;
+      }
+
+      const imageDataUrl = await resizeImageFile(imageFile);
+      messageContent = JSON.stringify({
+        kind: "image",
+        src: imageDataUrl,
+        name: imageFile.name,
+        text: content,
+      });
+    }
 
     const { error } = await supabaseClient.from("messages").insert({
       room_id: roomId,
       sender_id: currentUser.id,
       receiver_id: receiverId,
       message_type: "private",
-      content,
+      content: messageContent,
     });
 
     if (error) {
@@ -974,6 +1116,7 @@
 
     await sendMessageSentBroadcast("private");
     form.reset();
+    clearPrivateImagePreview(receiverId);
   }
 
   function subscribeRealtime() {

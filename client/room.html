@@ -120,9 +120,13 @@
               placeholder="개인 메시지 입력"
               maxlength="500"
               rows="3"
-              required
             ></textarea>
+            <label class="image-upload-button">
+              사진
+              <input type="file" name="image" accept="image/*" />
+            </label>
             <button class="primary-button" type="submit">전송</button>
+            <div class="image-preview is-hidden" id="private-image-preview" aria-live="polite"></div>
           </form>
         </section>
       </section>
