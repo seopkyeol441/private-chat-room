@@ -12,14 +12,14 @@
         <div class="room-title-area">
           <div>
             <p class="auth-kicker">Private Chat Room</p>
-            <h1 id="room-title">방</h1>
+            <h1 id="room-title">�?/h1>
             <p class="room-meta">코드 <span id="room-code">------</span></p>
           </div>
 
           <section class="header-member-panel" aria-labelledby="member-title">
-            <h2 id="member-title">참가자</h2>
+            <h2 id="member-title">참�???/h2>
             <div class="member-list header-member-list" id="member-list">
-              <p class="empty-state">참가자를 불러오는 중입니다.</p>
+              <p class="empty-state">참�??��? 불러?�는 중입?�다.</p>
             </div>
           </section>
         </div>
@@ -30,68 +30,61 @@
             id="admin-page-button"
             type="button"
           >
-            관리자 페이지
+            관리자 ?�이지
           </button>
           <button class="secondary-button" id="toggle-note-button" type="button">
-            메모장
-          </button>
+            메모??          </button>
           <button class="secondary-button" id="toggle-gallery-button" type="button">
-            사진 보관함
-          </button>
+            ?�진 보�???          </button>
           <button class="secondary-button" id="change-nickname-button" type="button">
-            닉네임 변경
-          </button>
+            ?�네??변�?          </button>
           <button class="secondary-button" id="leave-room-button" type="button">
-            방 나가기
-          </button>
+            �??��?�?          </button>
 
           <section class="room-panel note-popover is-hidden" id="note-body" aria-labelledby="note-title">
             <div class="panel-header note-window-header" id="note-window-header">
               <div>
-                <h2 id="note-title">개인 메모장</h2>
-                <p>이 방에서 나만 볼 수 있는 메모입니다.</p>
+                <h2 id="note-title">개인 메모??/h2>
+                <p>??방에???�만 �????�는 메모?�니??</p>
               </div>
               <button class="ghost-button note-close-button" id="close-note-button" type="button">
-                닫기
+                ?�기
               </button>
             </div>
 
             <textarea
               class="note-textarea"
               id="private-note"
-              placeholder="메모를 입력하세요."
+              placeholder="메모�??�력?�세??"
               rows="12"
             ></textarea>
 
             <button class="primary-button" id="save-note-button" type="button">
-              메모 저장
-            </button>
+              메모 ?�??            </button>
             <span class="note-resize-handle" id="note-resize-handle" aria-hidden="true"></span>
           </section>
 
           <section class="room-panel gallery-popover is-hidden" id="gallery-body" aria-labelledby="gallery-title">
             <div class="panel-header gallery-window-header" id="gallery-window-header">
               <div>
-                <h2 id="gallery-title">사진 보관함</h2>
-                <p>내가 보관한 사진만 표시됩니다.</p>
+                <h2 id="gallery-title">?�진 보�???/h2>
+                <p>?��? 보�????�진�??�시?�니??</p>
               </div>
               <button class="ghost-button" id="close-gallery-button" type="button">
-                닫기
+                ?�기
               </button>
             </div>
 
             <div class="gallery-list" id="gallery-list">
-              <p class="empty-state">보관한 사진이 없습니다.</p>
+              <p class="empty-state">보�????�진???�습?�다.</p>
             </div>
 
             <div class="gallery-pager" id="gallery-pager">
-              <button class="ghost-button" id="gallery-prev-button" type="button" aria-label="이전 사진">
-                ←
-              </button>
+              <button class="ghost-button" id="gallery-prev-button" type="button" aria-label="?�전 ?�진">
+                ??              </button>
               <span id="gallery-page-label">0 / 0</span>
-              <button class="ghost-button" id="gallery-next-button" type="button" aria-label="다음 사진">
-                →
-              </button>
+              <button class="ghost-button" id="gallery-next-button" type="button" aria-label="?�음 ?�진">
+                ??              </button>
             </div>
           </section>
         </div>
@@ -99,31 +92,32 @@
 
       <p class="auth-message room-message" id="room-message" aria-live="polite"></p>
 
-      <section class="room-layout" aria-label="채팅방">
+      <section class="room-layout" aria-label="채팅�?>
         <section class="room-panel chat-panel" aria-labelledby="global-chat-title">
           <div class="panel-header">
             <div>
-              <h2 id="global-chat-title">전체 채팅</h2>
-              <p>방에 있는 모든 사람에게 보입니다.</p>
+              <h2 id="global-chat-title">?�체 채팅</h2>
+              <p>방에 ?�는 모든 ?�람?�게 보입?�다.</p>
             </div>
           </div>
 
           <div class="message-list" id="global-message-list">
-            <p class="empty-state">메시지를 불러오는 중입니다.</p>
+            <p class="empty-state">메시지�?불러?�는 중입?�다.</p>
           </div>
 
           <form class="message-form" id="global-message-form">
-            <input
-              type="text"
+            <textarea
+              class="chat-textarea"
               name="content"
-              placeholder="전체 메시지 입력"
+              placeholder="?�체 메시지 ?�력"
               maxlength="500"
-            />
+              rows="3"
+            ></textarea>
             <label class="image-upload-button">
-              사진
+              ?�진
               <input type="file" name="image" accept="image/*" />
             </label>
-            <button class="primary-button" type="submit">전송</button>
+            <button class="primary-button" type="submit">?�송</button>
             <div class="image-preview is-hidden" id="global-image-preview" aria-live="polite"></div>
           </form>
         </section>
@@ -132,53 +126,53 @@
           <div class="panel-header">
             <div>
               <h2 id="private-chat-title">개인 채팅</h2>
-              <p id="private-chat-description">상대방을 불러오는 중입니다.</p>
+              <p id="private-chat-description">?��?방을 불러?�는 중입?�다.</p>
             </div>
           </div>
 
           <div class="participant-list" id="participant-list"></div>
 
           <div class="message-list private-message-list" id="private-message-list">
-            <p class="empty-state">개인 채팅을 선택해주세요.</p>
+            <p class="empty-state">개인 채팅???�택?�주?�요.</p>
           </div>
 
           <form class="message-form" id="private-message-form">
             <textarea
               class="chat-textarea"
               name="content"
-              placeholder="개인 메시지 입력"
+              placeholder="개인 메시지 ?�력"
               maxlength="500"
               rows="3"
             ></textarea>
             <label class="image-upload-button">
-              사진
+              ?�진
               <input type="file" name="image" accept="image/*" />
             </label>
-            <button class="primary-button" type="submit">전송</button>
+            <button class="primary-button" type="submit">?�송</button>
             <div class="image-preview is-hidden" id="private-image-preview" aria-live="polite"></div>
           </form>
         </section>
       </section>
 
-      <div class="image-viewer is-hidden" id="image-viewer" role="dialog" aria-modal="true" aria-label="사진 보기">
-        <button class="image-viewer-close" id="image-viewer-close" type="button" aria-label="닫기">
+      <div class="image-viewer is-hidden" id="image-viewer" role="dialog" aria-modal="true" aria-label="?�진 보기">
+        <button class="image-viewer-close" id="image-viewer-close" type="button" aria-label="?�기">
           ×
         </button>
-        <img id="image-viewer-img" alt="확대된 사진" />
+        <img id="image-viewer-img" alt="?��????�진" />
       </div>
 
       <div class="kick-alert is-hidden" id="kick-alert" role="alertdialog" aria-modal="true" aria-labelledby="kick-alert-title">
         <section class="kick-alert-box">
-          <h2 id="kick-alert-title">방에서 추방되었습니다</h2>
-          <p id="kick-alert-message">관리자에 의해 방에서 추방되었습니다.</p>
+          <h2 id="kick-alert-title">방에??추방?�었?�니??/h2>
+          <p id="kick-alert-message">관리자???�해 방에??추방?�었?�니??</p>
           <button class="primary-button" id="kick-alert-confirm" type="button">
-            확인
+            ?�인
           </button>
         </section>
       </div>
     </main>
 
-    <!-- Supabase SDK와 공통 클라이언트를 먼저 불러온 뒤 방 기능을 실행합니다. -->
+    <!-- Supabase SDK?� 공통 ?�라?�언?��? 먼�? 불러????�?기능???�행?�니?? -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/supabase.js"></script>
     <script src="./js/room.js"></script>
