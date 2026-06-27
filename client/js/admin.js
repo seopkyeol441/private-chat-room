@@ -45,6 +45,13 @@
     adminMessage.className = "auth-message room-message";
   }
 
+  function submitFormOnEnter(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
+
   function getFriendlyError(error) {
     if (!error) return "알 수 없는 오류가 발생했습니다.";
 
@@ -684,6 +691,7 @@
       textarea.placeholder = "개인 메시지 입력";
       textarea.maxLength = 500;
       textarea.rows = 2;
+      textarea.addEventListener("keydown", submitFormOnEnter);
 
       const imageButton = document.createElement("label");
       imageButton.className = "image-upload-button";
@@ -1363,6 +1371,7 @@
   }
 
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
+  globalMessageForm.querySelector('textarea[name="content"]').addEventListener("keydown", submitFormOnEnter);
   getGlobalImageInput().addEventListener("change", handleGlobalImageChange);
   globalMessageForm.addEventListener("paste", handleGlobalPaste);
   globalMessageList.addEventListener("dragover", handleGlobalDragOver);

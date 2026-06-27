@@ -72,6 +72,13 @@
     roomMessage.className = "auth-message room-message";
   }
 
+  function submitFormOnEnter(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
+
   function getFriendlyError(error) {
     if (!error) return "알 수 없는 오류가 발생했습니다.";
 
@@ -1669,12 +1676,14 @@
   }
 
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
+  globalMessageForm.querySelector('textarea[name="content"]').addEventListener("keydown", submitFormOnEnter);
   getGlobalImageInput().addEventListener("change", handleGlobalImageChange);
   globalMessageForm.addEventListener("paste", handleGlobalPaste);
   globalMessageList.addEventListener("dragover", handleGlobalDragOver);
   globalMessageList.addEventListener("dragleave", handleGlobalDragLeave);
   globalMessageList.addEventListener("drop", handleGlobalDrop);
   privateMessageForm.addEventListener("submit", sendPrivateMessage);
+  privateMessageForm.querySelector('textarea[name="content"]').addEventListener("keydown", submitFormOnEnter);
   getPrivateImageInput().addEventListener("change", handlePrivateImageChange);
   privateMessageForm.addEventListener("paste", handlePrivatePaste);
   privateMessageList.addEventListener("dragover", handlePrivateDragOver);
