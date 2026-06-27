@@ -159,6 +159,13 @@
           </form>
         </section>
       </section>
+
+      <div class="image-viewer is-hidden" id="image-viewer" role="dialog" aria-modal="true" aria-label="사진 보기">
+        <button class="image-viewer-close" id="image-viewer-close" type="button" aria-label="닫기">
+          ×
+        </button>
+        <img id="image-viewer-img" alt="확대된 사진" />
+      </div>
     </main>
 
     <!-- Supabase SDK와 공통 클라이언트를 먼저 불러온 뒤 방 기능을 실행합니다. -->

@@ -14,6 +14,9 @@
   const changeNicknameButton = document.querySelector("#admin-change-nickname-button");
   const memberList = document.querySelector("#admin-member-list");
   const privateDescription = document.querySelector("#admin-private-description");
+  const imageViewer = document.querySelector("#admin-image-viewer");
+  const imageViewerImg = document.querySelector("#admin-image-viewer-img");
+  const imageViewerClose = document.querySelector("#admin-image-viewer-close");
 
   const params = new URLSearchParams(window.location.search);
   const roomId = params.get("roomId");
@@ -533,9 +536,7 @@
       const viewButton = document.createElement("button");
       viewButton.type = "button";
       viewButton.textContent = "보기";
-      viewButton.addEventListener("click", () => {
-        window.open(messageContent.src, "_blank", "noopener");
-      });
+      viewButton.addEventListener("click", () => openImageViewer(messageContent));
 
       const downloadButton = document.createElement("button");
       downloadButton.type = "button";
@@ -568,6 +569,17 @@
     document.body.append(link);
     link.click();
     link.remove();
+  }
+
+  function openImageViewer(imageContent) {
+    imageViewerImg.src = imageContent.src;
+    imageViewerImg.alt = imageContent.name || "확대된 사진";
+    imageViewer.classList.remove("is-hidden");
+  }
+
+  function closeImageViewer() {
+    imageViewer.classList.add("is-hidden");
+    imageViewerImg.removeAttribute("src");
   }
 
   function resizeImageFile(file, maxSize = 900, quality = 0.78) {
@@ -1357,7 +1369,18 @@
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   changeNicknameButton.addEventListener("click", changeNickname);
   leaveButton.addEventListener("click", moveToLobby);
+  imageViewerClose.addEventListener("click", closeImageViewer);
+  imageViewer.addEventListener("click", (event) => {
+    if (event.target === imageViewer) {
+      closeImageViewer();
+    }
+  });
   window.addEventListener("beforeunload", cleanupRealtime);
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !imageViewer.classList.contains("is-hidden")) {
+      closeImageViewer();
+    }
+  });
 
   initAdmin();
 })();

@@ -1016,6 +1016,40 @@ textarea {
   padding: 0 10px;
 }
 
+.image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 42px 18px;
+  background: rgba(10, 18, 26, 0.78);
+}
+
+.image-viewer img {
+  max-width: min(96vw, 1120px);
+  max-height: 88vh;
+  border-radius: 10px;
+  object-fit: contain;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+}
+
+.image-viewer-close {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  color: #ffffff;
+  background: rgba(10, 18, 26, 0.62);
+  cursor: pointer;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .note-window-header {
   cursor: move;
   user-select: none;

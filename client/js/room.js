@@ -29,6 +29,9 @@
   const galleryNextButton = document.querySelector("#gallery-next-button");
   const galleryPageLabel = document.querySelector("#gallery-page-label");
   const closeGalleryButton = document.querySelector("#close-gallery-button");
+  const imageViewer = document.querySelector("#image-viewer");
+  const imageViewerImg = document.querySelector("#image-viewer-img");
+  const imageViewerClose = document.querySelector("#image-viewer-close");
   const closeNoteButton = document.querySelector("#close-note-button");
   const privateNote = document.querySelector("#private-note");
   const saveNoteButton = document.querySelector("#save-note-button");
@@ -482,9 +485,7 @@
       const viewButton = document.createElement("button");
       viewButton.type = "button";
       viewButton.textContent = "보기";
-      viewButton.addEventListener("click", () => {
-        window.open(messageContent.src, "_blank", "noopener");
-      });
+      viewButton.addEventListener("click", () => openImageViewer(messageContent));
 
       const downloadButton = document.createElement("button");
       downloadButton.type = "button";
@@ -620,9 +621,7 @@
       const viewButton = document.createElement("button");
       viewButton.type = "button";
       viewButton.textContent = "보기";
-      viewButton.addEventListener("click", () => {
-        window.open(item.src, "_blank", "noopener");
-      });
+      viewButton.addEventListener("click", () => openImageViewer(item));
 
       const downloadButton = document.createElement("button");
       downloadButton.type = "button";
@@ -684,6 +683,17 @@
 
   function closeGallery() {
     galleryBody.classList.add("is-hidden");
+  }
+
+  function openImageViewer(imageContent) {
+    imageViewerImg.src = imageContent.src;
+    imageViewerImg.alt = imageContent.name || "확대된 사진";
+    imageViewer.classList.remove("is-hidden");
+  }
+
+  function closeImageViewer() {
+    imageViewer.classList.add("is-hidden");
+    imageViewerImg.removeAttribute("src");
   }
 
   function resizeImageFile(file, maxSize = 900, quality = 0.78) {
@@ -1640,6 +1650,12 @@
   galleryList.addEventListener("dragover", handleGalleryDragOver);
   galleryList.addEventListener("dragleave", handleGalleryDragLeave);
   galleryList.addEventListener("drop", handleGalleryDrop);
+  imageViewerClose.addEventListener("click", closeImageViewer);
+  imageViewer.addEventListener("click", (event) => {
+    if (event.target === imageViewer) {
+      closeImageViewer();
+    }
+  });
   changeNicknameButton.addEventListener("click", changeNickname);
   closeNoteButton.addEventListener("click", closePrivateNote);
   noteWindowHeader.addEventListener("pointerdown", startDraggingNote);
@@ -1650,6 +1666,11 @@
   window.addEventListener("beforeunload", cleanupRealtime);
   window.addEventListener("resize", keepNoteWindowInViewport);
   window.addEventListener("resize", keepGalleryWindowInViewport);
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !imageViewer.classList.contains("is-hidden")) {
+      closeImageViewer();
+    }
+  });
 
   initRoom();
 })();
