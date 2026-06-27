@@ -260,6 +260,8 @@
 
     await loadGlobalMessages();
     showMessage(message);
+    sessionStorage.setItem("lobbyFlashMessage", message);
+    sessionStorage.setItem("lobbyFlashType", "error");
     globalMessageForm.classList.add("is-disabled");
     privateMessageForm.classList.add("is-disabled");
     leaveRoomButton.disabled = true;

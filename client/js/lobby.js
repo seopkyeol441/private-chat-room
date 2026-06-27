@@ -310,6 +310,17 @@
     window.location.href = "./login.html";
   }
 
+  function showFlashMessage() {
+    const message = sessionStorage.getItem("lobbyFlashMessage");
+    const type = sessionStorage.getItem("lobbyFlashType") || "error";
+
+    if (!message) return;
+
+    sessionStorage.removeItem("lobbyFlashMessage");
+    sessionStorage.removeItem("lobbyFlashType");
+    showMessage(message, type);
+  }
+
   async function initLobby() {
     if (!supabaseClient) {
       showMessage("Supabase 설정을 불러오지 못했습니다.");
@@ -324,6 +335,7 @@
 
     if (!hasProfile) return;
 
+    showFlashMessage();
     await loadRooms();
   }
 
