@@ -11,6 +11,7 @@
 
   let currentUser = null;
   let currentProfile = null;
+  let roomsChannel = null;
 
   function showMessage(message, type = "error") {
     lobbyMessage.textContent = message;
@@ -198,6 +199,39 @@
     renderRooms(data || []);
   }
 
+  function subscribeRoomsRealtime() {
+    if (roomsChannel) return;
+
+    roomsChannel = supabaseClient
+      .channel("lobby-rooms")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "rooms",
+        },
+        async (payload) => {
+          console.log("Lobby rooms realtime changed:", payload);
+          await loadRooms();
+        }
+      )
+      .subscribe((status, error) => {
+        console.log("Lobby rooms realtime status:", status);
+
+        if (error) {
+          console.error("Lobby rooms realtime error:", error);
+        }
+      });
+  }
+
+  function cleanupRealtime() {
+    if (!roomsChannel) return;
+
+    supabaseClient.removeChannel(roomsChannel);
+    roomsChannel = null;
+  }
+
   // 방 생성 후 만든 사용자를 room_members에 admin으로 추가하고 바로 관리자 화면으로 이동합니다.
   async function createRoom(event) {
     event.preventDefault();
@@ -367,11 +401,13 @@
 
     showFlashMessage();
     await loadRooms();
+    subscribeRoomsRealtime();
   }
 
   createRoomForm.addEventListener("submit", createRoom);
   refreshButton.addEventListener("click", loadRooms);
   logoutButton.addEventListener("click", logout);
+  window.addEventListener("beforeunload", cleanupRealtime);
 
   initLobby();
 })();
