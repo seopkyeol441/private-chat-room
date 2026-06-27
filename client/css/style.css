@@ -586,6 +586,28 @@ textarea {
   object-fit: contain;
 }
 
+.chat-image-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.chat-image-actions button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
+  color: #263645;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.chat-image-actions button:hover {
+  border-color: #1f7a6d;
+  color: #1f7a6d;
+}
+
 .message-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto 84px;

@@ -527,6 +527,24 @@
 
       wrapper.append(image);
 
+      const actions = document.createElement("div");
+      actions.className = "chat-image-actions";
+
+      const viewButton = document.createElement("button");
+      viewButton.type = "button";
+      viewButton.textContent = "보기";
+      viewButton.addEventListener("click", () => {
+        window.open(messageContent.src, "_blank", "noopener");
+      });
+
+      const downloadButton = document.createElement("button");
+      downloadButton.type = "button";
+      downloadButton.textContent = "저장";
+      downloadButton.addEventListener("click", () => downloadChatImage(messageContent));
+
+      actions.append(viewButton, downloadButton);
+      wrapper.append(actions);
+
       if (messageContent.text) {
         const caption = document.createElement("p");
         caption.textContent = messageContent.text;
@@ -539,6 +557,17 @@
     const content = document.createElement("p");
     content.textContent = messageContent.text;
     return content;
+  }
+
+  function downloadChatImage(messageContent) {
+    const link = document.createElement("a");
+    const fileName = messageContent.name || `chat-image-${Date.now()}.jpg`;
+
+    link.href = messageContent.src;
+    link.download = fileName;
+    document.body.append(link);
+    link.click();
+    link.remove();
   }
 
   function resizeImageFile(file, maxSize = 900, quality = 0.78) {
