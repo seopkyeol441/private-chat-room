@@ -25,6 +25,9 @@
   const galleryBody = document.querySelector("#gallery-body");
   const galleryWindowHeader = document.querySelector("#gallery-window-header");
   const galleryList = document.querySelector("#gallery-list");
+  const galleryPrevButton = document.querySelector("#gallery-prev-button");
+  const galleryNextButton = document.querySelector("#gallery-next-button");
+  const galleryPageLabel = document.querySelector("#gallery-page-label");
   const closeGalleryButton = document.querySelector("#close-gallery-button");
   const closeNoteButton = document.querySelector("#close-note-button");
   const privateNote = document.querySelector("#private-note");
@@ -49,6 +52,7 @@
   let onlineUserIds = new Set();
   let noteWindowPosition = null;
   let galleryWindowPosition = null;
+  let galleryPage = 0;
   let hasBeenKicked = false;
 
   function showMessage(message, type = "error") {
@@ -554,6 +558,7 @@
     });
 
     saveGalleryItems(items);
+    galleryPage = 0;
     renderGallery();
     showMessage("사진 보관함에 저장했습니다.", "success");
   }
@@ -587,15 +592,20 @@
 
   function renderGallery() {
     const items = getGalleryItems();
+    const pageSize = 4;
+    const totalPages = Math.ceil(items.length / pageSize);
 
     if (!items.length) {
       galleryList.innerHTML = '<p class="empty-state">보관한 사진이 없습니다.</p>';
+      galleryPage = 0;
+      updateGalleryPager(0);
       return;
     }
 
+    galleryPage = clamp(galleryPage, 0, totalPages - 1);
     galleryList.innerHTML = "";
 
-    items.forEach((item) => {
+    items.slice(galleryPage * pageSize, galleryPage * pageSize + pageSize).forEach((item) => {
       const card = document.createElement("article");
       card.className = "gallery-item";
 
@@ -628,6 +638,30 @@
       card.append(image, actions);
       galleryList.append(card);
     });
+
+    updateGalleryPager(totalPages);
+  }
+
+  function updateGalleryPager(totalPages) {
+    galleryPageLabel.textContent = totalPages ? `${galleryPage + 1} / ${totalPages}` : "0 / 0";
+    galleryPrevButton.disabled = galleryPage <= 0;
+    galleryNextButton.disabled = !totalPages || galleryPage >= totalPages - 1;
+  }
+
+  function showPreviousGalleryPage() {
+    if (galleryPage <= 0) return;
+
+    galleryPage -= 1;
+    renderGallery();
+  }
+
+  function showNextGalleryPage() {
+    const totalPages = Math.ceil(getGalleryItems().length / 4);
+
+    if (galleryPage >= totalPages - 1) return;
+
+    galleryPage += 1;
+    renderGallery();
   }
 
   function removeImageFromGallery(itemId) {
@@ -1600,6 +1634,8 @@
   toggleNoteButton.addEventListener("click", togglePrivateNote);
   toggleGalleryButton.addEventListener("click", toggleGallery);
   closeGalleryButton.addEventListener("click", closeGallery);
+  galleryPrevButton.addEventListener("click", showPreviousGalleryPage);
+  galleryNextButton.addEventListener("click", showNextGalleryPage);
   galleryWindowHeader.addEventListener("pointerdown", startDraggingGallery);
   galleryList.addEventListener("dragover", handleGalleryDragOver);
   galleryList.addEventListener("dragleave", handleGalleryDragLeave);

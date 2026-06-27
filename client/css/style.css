@@ -921,6 +921,9 @@ textarea {
   top: 82px;
   right: 24px;
   z-index: 22;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
   width: min(520px, calc(100vw - 32px));
   height: min(600px, calc(100vh - 120px));
   max-height: min(640px, calc(100vh - 120px));
@@ -986,6 +989,28 @@ textarea {
   cursor: pointer;
   font-size: 12px;
   font-weight: 800;
+}
+
+.gallery-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.gallery-pager span {
+  min-width: 54px;
+  color: #263645;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.gallery-pager button {
+  min-height: 34px;
+  min-width: 42px;
+  padding: 0 10px;
 }
 
 .note-window-header {
