@@ -553,6 +553,22 @@ textarea {
   background: #eaf7f4;
 }
 
+.chat-message.is-system {
+  justify-self: center;
+  max-width: 92%;
+  padding: 7px 12px;
+  border-color: #d9e1ea;
+  color: #52606d;
+  background: #f3f6f9;
+  text-align: center;
+}
+
+.chat-message.is-system .system-message-text {
+  color: #52606d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .message-header {
   display: flex;
   align-items: center;

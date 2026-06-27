@@ -87,7 +87,10 @@
       sender_id: currentUser.id,
       receiver_id: null,
       message_type: "global",
-      content: message,
+      content: JSON.stringify({
+        kind: "system",
+        text: message,
+      }),
     });
 
     if (error) {

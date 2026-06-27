@@ -124,7 +124,10 @@
       sender_id: currentUser.id,
       receiver_id: null,
       message_type: "global",
-      content: message,
+      content: JSON.stringify({
+        kind: "system",
+        text: message,
+      }),
     });
 
     if (error) {
@@ -507,8 +510,15 @@
   function createMessageElement(message) {
     const item = document.createElement("article");
     const isMine = message.sender_id === currentUser.id;
-    item.className = `chat-message${isMine ? " is-mine" : ""}`;
     const parsedMessage = parseMessageContent(message.content);
+
+    if (parsedMessage.kind === "system") {
+      item.className = "chat-message is-system";
+      item.append(createMessageContentElement(parsedMessage));
+      return item;
+    }
+
+    item.className = `chat-message${isMine ? " is-mine" : ""}`;
 
     const messageHeader = document.createElement("div");
     messageHeader.className = "message-header";
@@ -541,6 +551,10 @@
       if (parsed?.kind === "image" && parsed.src) {
         return parsed;
       }
+
+      if (parsed?.kind === "system" && parsed.text) {
+        return parsed;
+      }
     } catch (error) {
       // 기존 텍스트 메시지는 JSON이 아니므로 그대로 표시합니다.
     }
@@ -549,6 +563,13 @@
   }
 
   function createMessageContentElement(messageContent) {
+    if (messageContent.kind === "system") {
+      const content = document.createElement("p");
+      content.className = "system-message-text";
+      content.textContent = messageContent.text;
+      return content;
+    }
+
     if (messageContent.kind === "image") {
       const wrapper = document.createElement("div");
       wrapper.className = "chat-image-message";
