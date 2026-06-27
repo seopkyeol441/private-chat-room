@@ -13,6 +13,9 @@
   const clearGlobalChatButton = document.querySelector("#clear-global-chat-button");
   const changeNicknameButton = document.querySelector("#admin-change-nickname-button");
   const deleteRoomButton = document.querySelector("#delete-room-button");
+  const toggleMembersButton = document.querySelector("#toggle-admin-members-button");
+  const membersPopover = document.querySelector("#admin-member-popover");
+  const closeMembersButton = document.querySelector("#close-admin-members-button");
   const memberList = document.querySelector("#admin-member-list");
   const privateDescription = document.querySelector("#admin-private-description");
   const imageViewer = document.querySelector("#admin-image-viewer");
@@ -327,12 +330,21 @@
     const panel = getPrivateChatPanel(userId);
 
     if (panel) {
+      closeMembersPopover();
       panel.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
       panel.classList.add("is-highlighted");
       window.setTimeout(() => {
         panel.classList.remove("is-highlighted");
       }, 900);
     }
+  }
+
+  function toggleMembersPopover() {
+    membersPopover.classList.toggle("is-hidden");
+  }
+
+  function closeMembersPopover() {
+    membersPopover.classList.add("is-hidden");
   }
 
   async function kickParticipant(member) {
@@ -1537,6 +1549,8 @@
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   changeNicknameButton.addEventListener("click", changeNickname);
   deleteRoomButton.addEventListener("click", deleteRoom);
+  toggleMembersButton.addEventListener("click", toggleMembersPopover);
+  closeMembersButton.addEventListener("click", closeMembersPopover);
   leaveButton.addEventListener("click", leaveRoomWithMessage);
   imageViewerClose.addEventListener("click", closeImageViewer);
   imageViewer.addEventListener("click", (event) => {

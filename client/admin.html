@@ -16,10 +16,20 @@
             <p class="room-meta">코드 <span id="admin-room-code">------</span></p>
           </div>
 
-          <section class="header-member-panel" aria-labelledby="admin-member-title">
-            <h2 id="admin-member-title">참가자</h2>
-            <div class="member-list header-member-list admin-member-list" id="admin-member-list">
-              <p class="empty-state">참가자를 불러오는 중입니다.</p>
+          <section class="header-member-panel admin-member-popover-wrap" aria-labelledby="admin-member-title">
+            <button class="secondary-button" id="toggle-admin-members-button" type="button">
+              참가자
+            </button>
+            <div class="admin-member-popover is-hidden" id="admin-member-popover">
+              <div class="panel-header admin-member-popover-header">
+                <h2 id="admin-member-title">참가자</h2>
+                <button class="ghost-button" id="close-admin-members-button" type="button">
+                  닫기
+                </button>
+              </div>
+              <div class="member-list header-member-list admin-member-list" id="admin-member-list">
+                <p class="empty-state">참가자를 불러오는 중입니다.</p>
+              </div>
             </div>
           </section>
         </div>

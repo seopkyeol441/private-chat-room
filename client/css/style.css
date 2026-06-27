@@ -815,12 +815,38 @@ textarea {
 }
 
 .header-member-panel {
-  width: min(46vw, 500px);
-  min-width: 300px;
+  position: relative;
+  width: auto;
+  min-width: 0;
   padding: 8px 10px;
   border: 1px solid rgba(23, 32, 42, 0.08);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.72);
+}
+
+.admin-member-popover-wrap {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.admin-member-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(420px, 82vw);
+  max-height: min(520px, 72vh);
+  padding: 12px;
+  border: 1px solid rgba(23, 32, 42, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 50px rgba(23, 32, 42, 0.18);
+}
+
+.admin-member-popover-header {
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .header-member-panel h2 {
@@ -840,8 +866,9 @@ textarea {
 }
 
 .admin-member-list {
-  flex-wrap: wrap;
-  max-height: 118px;
+  display: grid;
+  flex-wrap: nowrap;
+  max-height: min(430px, 58vh);
   overflow-x: hidden;
   overflow-y: auto;
 }
