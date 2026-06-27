@@ -328,6 +328,12 @@
     sessionStorage.removeItem("lobbyFlashMessage");
     sessionStorage.removeItem("lobbyFlashType");
     showMessage(message, type);
+
+    if (message.includes("추방")) {
+      window.setTimeout(() => {
+        window.alert(message);
+      }, 50);
+    }
   }
 
   async function initLobby() {

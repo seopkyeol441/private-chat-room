@@ -56,6 +56,7 @@
   let noteWindowPosition = null;
   let galleryWindowPosition = null;
   let galleryPage = 0;
+  let membershipCheckTimer = null;
   let hasBeenKicked = false;
 
   function showMessage(message, type = "error") {
@@ -305,6 +306,32 @@
       window.alert(message);
       moveToLobby();
     }, 50);
+  }
+
+  async function checkCurrentMembership() {
+    if (!currentUser || hasBeenKicked) return;
+
+    const { data, error } = await supabaseClient
+      .from("room_members")
+      .select("id")
+      .eq("room_id", roomId)
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Membership check error:", error);
+      return;
+    }
+
+    if (!data) {
+      await handleKickedFromRoom();
+    }
+  }
+
+  function startMembershipCheck() {
+    if (membershipCheckTimer) return;
+
+    membershipCheckTimer = window.setInterval(checkCurrentMembership, 1500);
   }
 
   function renderMemberList() {
@@ -1573,6 +1600,11 @@
   }
 
   function cleanupRealtime() {
+    if (membershipCheckTimer) {
+      window.clearInterval(membershipCheckTimer);
+      membershipCheckTimer = null;
+    }
+
     if (messagesChannel) {
       supabaseClient.removeChannel(messagesChannel);
       messagesChannel = null;
@@ -1627,6 +1659,7 @@
     await loadGlobalMessages();
     await loadPrivateNote();
     subscribeRealtime();
+    startMembershipCheck();
   }
 
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
