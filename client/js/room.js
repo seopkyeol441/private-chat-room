@@ -462,6 +462,11 @@
       image.src = messageContent.src;
       image.alt = messageContent.name || "채팅 이미지";
       image.loading = "lazy";
+      image.draggable = true;
+      image.addEventListener("dragstart", (event) => {
+        event.dataTransfer.setData("application/json", JSON.stringify(messageContent));
+        event.dataTransfer.effectAllowed = "copy";
+      });
 
       wrapper.append(image);
 
@@ -549,6 +554,33 @@
     saveGalleryItems(items);
     renderGallery();
     showMessage("사진 보관함에 저장했습니다.", "success");
+  }
+
+  function handleGalleryDragOver(event) {
+    event.preventDefault();
+    galleryList.classList.add("is-drag-over");
+  }
+
+  function handleGalleryDragLeave() {
+    galleryList.classList.remove("is-drag-over");
+  }
+
+  function handleGalleryDrop(event) {
+    event.preventDefault();
+    galleryList.classList.remove("is-drag-over");
+
+    try {
+      const messageContent = JSON.parse(event.dataTransfer.getData("application/json"));
+
+      if (messageContent?.kind === "image" && messageContent.src) {
+        saveImageToGallery(messageContent);
+        return;
+      }
+    } catch (error) {
+      // 다른 파일/텍스트를 드롭한 경우 아래 안내를 보여줍니다.
+    }
+
+    showMessage("채팅 메시지에 있는 사진만 보관함에 드래그해서 넣을 수 있습니다.");
   }
 
   function renderGallery() {
@@ -1499,6 +1531,9 @@
   toggleNoteButton.addEventListener("click", togglePrivateNote);
   toggleGalleryButton.addEventListener("click", toggleGallery);
   closeGalleryButton.addEventListener("click", closeGallery);
+  galleryList.addEventListener("dragover", handleGalleryDragOver);
+  galleryList.addEventListener("dragleave", handleGalleryDragLeave);
+  galleryList.addEventListener("drop", handleGalleryDrop);
   changeNicknameButton.addEventListener("click", changeNickname);
   closeNoteButton.addEventListener("click", closePrivateNote);
   noteWindowHeader.addEventListener("pointerdown", startDraggingNote);
