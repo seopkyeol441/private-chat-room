@@ -657,6 +657,21 @@
     renderGallery();
   }
 
+  async function deleteMyPrivateNote() {
+    const { error } = await supabaseClient
+      .from("private_notes")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("user_id", currentUser.id);
+
+    if (error) {
+      console.warn("Private note delete failed:", error);
+    }
+
+    noteRowId = null;
+    privateNote.value = "";
+  }
+
   function saveImageToGallery(messageContent) {
     const items = getGalleryItems();
     const alreadySaved = items.some((item) => item.src === messageContent.src);
@@ -1681,6 +1696,7 @@
 
         if (payload?.room_id !== roomId) return;
 
+        await deleteMyPrivateNote();
         clearGalleryItems();
         sessionStorage.setItem("lobbyFlashMessage", "관리자가 방을 제거했습니다.");
         sessionStorage.setItem("lobbyFlashType", "error");
