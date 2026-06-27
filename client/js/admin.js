@@ -582,7 +582,7 @@
     imageViewerImg.removeAttribute("src");
   }
 
-  function resizeImageFile(file, maxSize = 900, quality = 0.78) {
+  function resizeImageFile(file, maxSize = 1500, quality = 0.9) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
