@@ -741,6 +741,27 @@
     console.log("Admin message deleted broadcast response:", response);
   }
 
+  async function sendMessageSentBroadcast(messageType = "global") {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "message-sent",
+      payload: {
+        room_id: roomId,
+        message_type: messageType,
+        sent_by: currentUser.id,
+        sent_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Admin message sent broadcast response:", response);
+  }
+
   async function sendGlobalMessage(event) {
     event.preventDefault();
     clearMessage();
@@ -781,6 +802,7 @@
       return;
     }
 
+    await sendMessageSentBroadcast("global");
     globalMessageForm.reset();
   }
 
@@ -905,6 +927,7 @@
       return;
     }
 
+    await sendMessageSentBroadcast("private");
     form.reset();
   }
 
@@ -1018,6 +1041,14 @@
       })
       .on("broadcast", { event: "message-deleted" }, async ({ payload }) => {
         console.log("Admin message deleted broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        await loadGlobalMessages();
+        await loadPrivateMessages();
+      })
+      .on("broadcast", { event: "message-sent" }, async ({ payload }) => {
+        console.log("Admin message sent broadcast:", payload);
 
         if (payload?.room_id !== roomId) return;
 

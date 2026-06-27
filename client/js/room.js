@@ -601,6 +601,27 @@
     console.log("Room message deleted broadcast response:", response);
   }
 
+  async function sendMessageSentBroadcast(messageType = "global") {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "message-sent",
+      payload: {
+        room_id: roomId,
+        message_type: messageType,
+        sent_by: currentUser.id,
+        sent_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Room message sent broadcast response:", response);
+  }
+
   async function waitForChatActionsChannel() {
     for (let attempt = 0; attempt < 6; attempt += 1) {
       if (chatActionsChannelReady) return true;
@@ -714,6 +735,7 @@
       return;
     }
 
+    await sendMessageSentBroadcast("global");
     globalMessageForm.reset();
   }
 
@@ -788,6 +810,7 @@
       return;
     }
 
+    await sendMessageSentBroadcast("private");
     privateMessageForm.reset();
   }
 
@@ -1072,6 +1095,14 @@
       })
       .on("broadcast", { event: "message-deleted" }, async ({ payload }) => {
         console.log("Room message deleted broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        await loadGlobalMessages();
+        await loadPrivateMessages();
+      })
+      .on("broadcast", { event: "message-sent" }, async ({ payload }) => {
+        console.log("Room message sent broadcast:", payload);
 
         if (payload?.room_id !== roomId) return;
 
