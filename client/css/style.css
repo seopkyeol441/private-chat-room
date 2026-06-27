@@ -831,10 +831,10 @@ textarea {
 }
 
 .admin-member-popover {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 8px);
-  right: 0;
+  position: fixed;
+  z-index: 80;
+  top: 96px;
+  left: calc(50% + 170px);
   width: min(420px, 82vw);
   max-height: min(520px, 72vh);
   padding: 12px;
@@ -847,6 +847,8 @@ textarea {
 .admin-member-popover-header {
   align-items: center;
   margin-bottom: 10px;
+  cursor: move;
+  user-select: none;
 }
 
 .header-member-panel h2 {

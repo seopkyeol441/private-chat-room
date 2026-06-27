@@ -16,6 +16,7 @@
   const toggleMembersButton = document.querySelector("#toggle-admin-members-button");
   const membersPopover = document.querySelector("#admin-member-popover");
   const closeMembersButton = document.querySelector("#close-admin-members-button");
+  const membersPopoverHeader = document.querySelector(".admin-member-popover-header");
   const memberList = document.querySelector("#admin-member-list");
   const privateDescription = document.querySelector("#admin-private-description");
   const imageViewer = document.querySelector("#admin-image-viewer");
@@ -39,6 +40,7 @@
   let kickChannelReady = false;
   let chatActionsChannelReady = false;
   let onlineUserIds = new Set();
+  let membersPopoverPosition = null;
 
   function showMessage(message, type = "error") {
     adminMessage.textContent = message;
@@ -340,11 +342,69 @@
   }
 
   function toggleMembersPopover() {
-    membersPopover.classList.toggle("is-hidden");
+    const shouldOpen = membersPopover.classList.contains("is-hidden");
+    membersPopover.classList.toggle("is-hidden", !shouldOpen);
+
+    if (shouldOpen) {
+      positionMembersPopover();
+    }
   }
 
   function closeMembersPopover() {
     membersPopover.classList.add("is-hidden");
+  }
+
+  function positionMembersPopover() {
+    const rect = membersPopover.getBoundingClientRect();
+    const width = Math.min(rect.width || 420, window.innerWidth - 16);
+    const height = Math.min(rect.height || 520, window.innerHeight - 16);
+    const buttonRect = toggleMembersButton.getBoundingClientRect();
+    const x = membersPopoverPosition
+      ? Math.min(Math.max(8, membersPopoverPosition.x), Math.max(8, window.innerWidth - width - 8))
+      : Math.min(Math.max(8, buttonRect.right - width), Math.max(8, window.innerWidth - width - 8));
+    const y = membersPopoverPosition
+      ? Math.min(Math.max(8, membersPopoverPosition.y), Math.max(8, window.innerHeight - height - 8))
+      : Math.min(buttonRect.bottom + 8, Math.max(8, window.innerHeight - height - 8));
+
+    membersPopoverPosition = { x, y };
+    membersPopover.style.left = `${x}px`;
+    membersPopover.style.top = `${y}px`;
+  }
+
+  function startDraggingMembersPopover(event) {
+    if (event.button !== 0) return;
+
+    const rect = membersPopover.getBoundingClientRect();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const originX = rect.left;
+    const originY = rect.top;
+
+    event.preventDefault();
+    membersPopoverHeader.setPointerCapture?.(event.pointerId);
+
+    function moveMembersPopover(moveEvent) {
+      const nextX = Math.min(
+        Math.max(8, originX + moveEvent.clientX - startX),
+        Math.max(8, window.innerWidth - rect.width - 8)
+      );
+      const nextY = Math.min(
+        Math.max(8, originY + moveEvent.clientY - startY),
+        Math.max(8, window.innerHeight - rect.height - 8)
+      );
+
+      membersPopoverPosition = { x: nextX, y: nextY };
+      membersPopover.style.left = `${nextX}px`;
+      membersPopover.style.top = `${nextY}px`;
+    }
+
+    function stopDraggingMembersPopover() {
+      window.removeEventListener("pointermove", moveMembersPopover);
+      window.removeEventListener("pointerup", stopDraggingMembersPopover);
+    }
+
+    window.addEventListener("pointermove", moveMembersPopover);
+    window.addEventListener("pointerup", stopDraggingMembersPopover);
   }
 
   async function kickParticipant(member) {
@@ -1551,6 +1611,7 @@
   deleteRoomButton.addEventListener("click", deleteRoom);
   toggleMembersButton.addEventListener("click", toggleMembersPopover);
   closeMembersButton.addEventListener("click", closeMembersPopover);
+  membersPopoverHeader.addEventListener("pointerdown", startDraggingMembersPopover);
   leaveButton.addEventListener("click", leaveRoomWithMessage);
   imageViewerClose.addEventListener("click", closeImageViewer);
   imageViewer.addEventListener("click", (event) => {
