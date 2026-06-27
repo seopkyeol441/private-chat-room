@@ -284,9 +284,6 @@
     }
 
     const memberName = getMemberName(member);
-    const ok = window.confirm(`${memberName}님을 이 방에서 추방할까요?`);
-
-    if (!ok) return;
 
     const { data: deletedMember, error: deleteError } = await supabaseClient
       .from("room_members")
@@ -309,6 +306,10 @@
 
     const kickMessage = `${memberName}님이 관리자에 의해 추방되었습니다.`;
 
+    // 삭제가 성공한 직후 추방당한 플레이어에게 먼저 알려줍니다.
+    // 전체 채팅 저장보다 이 알림을 먼저 보내야 플레이어 화면이 바로 반응합니다.
+    await sendKickBroadcast(member.user_id, kickMessage);
+
     const { error: messageError } = await supabaseClient.from("messages").insert({
       room_id: roomId,
       sender_id: currentUser.id,
@@ -321,8 +322,6 @@
       showMessage(getFriendlyError(messageError));
       return;
     }
-
-    await sendKickBroadcast(member.user_id, kickMessage);
 
     if (selectedUserId === member.user_id) {
       selectedUserId = null;
