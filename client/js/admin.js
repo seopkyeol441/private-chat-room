@@ -348,7 +348,7 @@
       payload: {
         room_id: roomId,
         user_id: userId,
-        message: `${message} 잠시 후 로비로 이동합니다.`,
+        message,
       },
     });
 

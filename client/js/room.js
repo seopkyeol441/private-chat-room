@@ -252,7 +252,7 @@
     return true;
   }
 
-  async function handleKickedFromRoom(message = "관리자에 의해 방에서 추방되었습니다. 로비로 이동합니다.") {
+  async function handleKickedFromRoom(message = "관리자에 의해 방에서 추방되었습니다.") {
     if (hasBeenKicked) return;
 
     hasBeenKicked = true;
