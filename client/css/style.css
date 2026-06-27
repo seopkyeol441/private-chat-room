@@ -497,17 +497,24 @@ textarea {
 }
 
 .private-slot-form {
-  grid-template-columns: minmax(0, 1fr) auto 64px;
+  grid-template-columns: minmax(0, 1fr) 72px;
   gap: 8px;
 }
 
 .private-slot-form textarea {
-  min-height: 58px;
-  resize: none;
+  grid-column: 1 / -1;
+  min-height: 78px;
+  resize: vertical;
+}
+
+.private-slot-form .image-upload-button {
+  min-height: 38px;
+  padding: 0 10px;
 }
 
 .private-slot-form .primary-button {
   min-width: 0;
+  min-height: 38px;
   padding: 0 8px;
 }
 
