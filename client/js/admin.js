@@ -26,7 +26,9 @@
   let membersChannel = null;
   let presenceChannel = null;
   let kickChannel = null;
+  let chatActionsChannel = null;
   let kickChannelReady = false;
+  let chatActionsChannelReady = false;
   let onlineUserIds = new Set();
 
   function showMessage(message, type = "error") {
@@ -366,6 +368,16 @@
     return false;
   }
 
+  async function waitForChatActionsChannel() {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      if (chatActionsChannelReady) return true;
+      await new Promise((resolve) => window.setTimeout(resolve, 50));
+    }
+
+    console.warn("Chat actions broadcast channel is not ready yet.");
+    return false;
+  }
+
   function createMessageElement(message) {
     const item = document.createElement("article");
     const isMine = message.sender_id === currentUser.id;
@@ -485,8 +497,29 @@
       return;
     }
 
+    await sendChatClearedBroadcast();
     globalMessageList.innerHTML = '<p class="empty-state">아직 전체 메시지가 없습니다.</p>';
     showMessage("전체 채팅을 삭제했습니다.", "success");
+  }
+
+  async function sendChatClearedBroadcast() {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "global-chat-cleared",
+      payload: {
+        room_id: roomId,
+        cleared_by: currentUser.id,
+        cleared_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Admin global chat cleared broadcast response:", response);
   }
 
   async function sendPrivateMessage(event) {
@@ -617,6 +650,27 @@
           console.error("Admin kick broadcast error:", error);
         }
       });
+
+    chatActionsChannel = supabaseClient
+      .channel(`room-chat-actions-${roomId}`)
+      .on("broadcast", { event: "global-chat-cleared" }, async ({ payload }) => {
+        console.log("Admin global chat cleared broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        await loadGlobalMessages();
+      })
+      .subscribe((status, error) => {
+        console.log("Admin chat actions broadcast status:", status);
+
+        if (status === "SUBSCRIBED") {
+          chatActionsChannelReady = true;
+        }
+
+        if (error) {
+          console.error("Admin chat actions broadcast error:", error);
+        }
+      });
   }
 
   function cleanupRealtime() {
@@ -640,6 +694,12 @@
       supabaseClient.removeChannel(kickChannel);
       kickChannel = null;
       kickChannelReady = false;
+    }
+
+    if (chatActionsChannel) {
+      supabaseClient.removeChannel(chatActionsChannel);
+      chatActionsChannel = null;
+      chatActionsChannelReady = false;
     }
   }
 

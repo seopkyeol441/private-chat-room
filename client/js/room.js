@@ -36,6 +36,7 @@
   let membersChannel = null;
   let presenceChannel = null;
   let kickChannel = null;
+  let chatActionsChannel = null;
   let onlineUserIds = new Set();
   let noteWindowPosition = null;
   let hasBeenKicked = false;
@@ -780,6 +781,23 @@
           console.error("Room kick broadcast error:", error);
         }
       });
+
+    chatActionsChannel = supabaseClient
+      .channel(`room-chat-actions-${roomId}`)
+      .on("broadcast", { event: "global-chat-cleared" }, async ({ payload }) => {
+        console.log("Room global chat cleared broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        await loadGlobalMessages();
+      })
+      .subscribe((status, error) => {
+        console.log("Room chat actions broadcast status:", status);
+
+        if (error) {
+          console.error("Room chat actions broadcast error:", error);
+        }
+      });
   }
 
   function cleanupRealtime() {
@@ -806,6 +824,12 @@
       supabaseClient.removeChannel(kickChannel);
       kickChannel = null;
       console.log("Room kick broadcast channel removed");
+    }
+
+    if (chatActionsChannel) {
+      supabaseClient.removeChannel(chatActionsChannel);
+      chatActionsChannel = null;
+      console.log("Room chat actions broadcast channel removed");
     }
   }
 
