@@ -260,17 +260,14 @@
   function renderMembers() {
     const participants = roomMembers.filter((member) => member.user_id !== currentUser.id);
 
+    selectedUserIds = participants.map((member) => member.user_id);
+
     if (!participants.length) {
-      selectedUserIds = [];
       memberList.innerHTML = '<p class="empty-state">아직 참가자가 없습니다.</p>';
       privateDescription.textContent = "참가자가 들어오면 개인 채팅을 시작할 수 있습니다.";
       renderPrivateChatPanels();
       return;
     }
-
-    selectedUserIds = selectedUserIds.filter((userId) =>
-      participants.some((member) => member.user_id === userId)
-    );
 
     memberList.innerHTML = "";
 
@@ -295,7 +292,6 @@
       }`;
 
       button.append(name, role);
-      button.classList.toggle("is-active", selectedUserIds.includes(member.user_id));
       button.addEventListener("click", () => selectParticipant(member.user_id));
 
       const kickButton = document.createElement("button");
@@ -315,31 +311,28 @@
 
   function updateSelectedParticipant() {
     memberList.querySelectorAll(".member-select-button").forEach((button) => {
-      button.classList.toggle("is-active", selectedUserIds.includes(button.dataset.userId));
+      button.classList.toggle("is-active", false);
     });
 
     if (!selectedUserIds.length) {
-      privateDescription.textContent = "참가자를 최대 4명까지 선택해주세요.";
+      privateDescription.textContent = "참가자가 들어오면 개인 채팅을 시작할 수 있습니다.";
     } else {
-      privateDescription.textContent = `${selectedUserIds.length}/4명과 개인 채팅 중입니다.`;
+      privateDescription.textContent = `${selectedUserIds.length}명과 개인 채팅을 한 번에 관리하고 있습니다.`;
     }
 
     renderPrivateChatPanels();
   }
 
   function selectParticipant(userId) {
-    if (selectedUserIds.includes(userId)) {
-      selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
-    } else {
-      if (selectedUserIds.length >= 4) {
-        showMessage("개인 채팅은 한 번에 최대 4명까지 선택할 수 있습니다.");
-        return;
-      }
+    const panel = getPrivateChatPanel(userId);
 
-      selectedUserIds.push(userId);
+    if (panel) {
+      panel.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+      panel.classList.add("is-highlighted");
+      window.setTimeout(() => {
+        panel.classList.remove("is-highlighted");
+      }, 900);
     }
-
-    updateSelectedParticipant();
   }
 
   async function kickParticipant(member) {
@@ -715,13 +708,6 @@
       const title = document.createElement("strong");
       title.textContent = getProfileName(userId);
 
-      const closeButton = document.createElement("button");
-      closeButton.className = "message-delete-button";
-      closeButton.type = "button";
-      closeButton.textContent = "×";
-      closeButton.setAttribute("aria-label", "개인 채팅 닫기");
-      closeButton.addEventListener("click", () => closePrivateChat(userId));
-
       const lockButton = document.createElement("button");
       lockButton.className = "private-lock-button";
       lockButton.type = "button";
@@ -729,7 +715,7 @@
       lockButton.classList.toggle("is-locked", lockedPrivateUserIds.has(userId));
       lockButton.addEventListener("click", () => togglePrivateChatLock(userId));
 
-      header.append(title, lockButton, closeButton);
+      header.append(title, lockButton);
 
       const messageList = document.createElement("div");
       messageList.className = "message-list private-message-list private-slot-message-list";
