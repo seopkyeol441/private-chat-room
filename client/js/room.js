@@ -24,7 +24,6 @@
   const toggleGalleryButton = document.querySelector("#toggle-gallery-button");
   const galleryBody = document.querySelector("#gallery-body");
   const galleryWindowHeader = document.querySelector("#gallery-window-header");
-  const galleryResizeHandle = document.querySelector("#gallery-resize-handle");
   const galleryList = document.querySelector("#gallery-list");
   const closeGalleryButton = document.querySelector("#close-gallery-button");
   const closeNoteButton = document.querySelector("#close-note-button");
@@ -1373,33 +1372,6 @@
     window.addEventListener("pointerup", stopDraggingGallery);
   }
 
-  function startResizingGallery(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    placeGalleryWindow();
-
-    const startX = event.clientX;
-    const startY = event.clientY;
-    const rect = galleryBody.getBoundingClientRect();
-
-    function resizeGallery(moveEvent) {
-      const nextWidth = clamp(rect.width + moveEvent.clientX - startX, 320, window.innerWidth - rect.left - 8);
-      const nextHeight = clamp(rect.height + moveEvent.clientY - startY, 300, window.innerHeight - rect.top - 8);
-
-      galleryBody.style.width = `${nextWidth}px`;
-      galleryBody.style.height = `${nextHeight}px`;
-    }
-
-    function stopResizingGallery() {
-      window.removeEventListener("pointermove", resizeGallery);
-      window.removeEventListener("pointerup", stopResizingGallery);
-      keepGalleryWindowInViewport();
-    }
-
-    window.addEventListener("pointermove", resizeGallery);
-    window.addEventListener("pointerup", stopResizingGallery);
-  }
-
   function subscribeRealtime() {
     messagesChannel = supabaseClient
       .channel(`room-messages-${roomId}`)
@@ -1625,7 +1597,6 @@
   toggleGalleryButton.addEventListener("click", toggleGallery);
   closeGalleryButton.addEventListener("click", closeGallery);
   galleryWindowHeader.addEventListener("pointerdown", startDraggingGallery);
-  galleryResizeHandle.addEventListener("pointerdown", startResizingGallery);
   galleryList.addEventListener("dragover", handleGalleryDragOver);
   galleryList.addEventListener("dragleave", handleGalleryDragLeave);
   galleryList.addEventListener("drop", handleGalleryDrop);
