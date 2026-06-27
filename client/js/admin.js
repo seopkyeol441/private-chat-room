@@ -11,6 +11,7 @@
   const globalMessageForm = document.querySelector("#admin-global-message-form");
   const privateMessageForm = document.querySelector("#admin-private-message-form");
   const clearGlobalChatButton = document.querySelector("#clear-global-chat-button");
+  const changeNicknameButton = document.querySelector("#admin-change-nickname-button");
   const memberList = document.querySelector("#admin-member-list");
   const privateDescription = document.querySelector("#admin-private-description");
 
@@ -65,6 +66,23 @@
   function getProfileName(userId) {
     const profile = profileMap.get(userId);
     return profile?.nickname || profile?.username || "알 수 없음";
+  }
+
+  async function refreshProfile(userId) {
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .select("id, username, nickname")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      showMessage(getFriendlyError(error));
+      return;
+    }
+
+    if (data) {
+      profileMap.set(data.id, data);
+    }
   }
 
   function getMemberName(member) {
@@ -376,6 +394,68 @@
 
     console.warn("Chat actions broadcast channel is not ready yet.");
     return false;
+  }
+
+  async function changeNickname() {
+    clearMessage();
+
+    const currentNickname = getProfileName(currentUser.id);
+    const nickname = window.prompt("새 닉네임을 입력하세요.", currentNickname)?.trim();
+
+    if (!nickname || nickname === currentNickname) return;
+
+    if (nickname.length > 20) {
+      showMessage("닉네임은 20자 이하로 입력해주세요.");
+      return;
+    }
+
+    changeNicknameButton.disabled = true;
+    changeNicknameButton.textContent = "변경 중...";
+
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .update({ nickname })
+      .eq("id", currentUser.id)
+      .select("id, username, nickname")
+      .maybeSingle();
+
+    changeNicknameButton.disabled = false;
+    changeNicknameButton.textContent = "닉네임 변경";
+
+    if (error) {
+      showMessage(getFriendlyError(error));
+      return;
+    }
+
+    if (data) {
+      profileMap.set(data.id, data);
+    }
+
+    await sendNicknameUpdatedBroadcast(currentUser.id);
+    renderMembers();
+    await loadGlobalMessages();
+    await loadPrivateMessages();
+    showMessage("닉네임을 변경했습니다.", "success");
+  }
+
+  async function sendNicknameUpdatedBroadcast(userId) {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "nickname-updated",
+      payload: {
+        room_id: roomId,
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Admin nickname updated broadcast response:", response);
   }
 
   function createMessageElement(message) {
@@ -724,6 +804,16 @@
         await loadGlobalMessages();
         await loadPrivateMessages();
       })
+      .on("broadcast", { event: "nickname-updated" }, async ({ payload }) => {
+        console.log("Admin nickname updated broadcast:", payload);
+
+        if (payload?.room_id !== roomId || !payload.user_id) return;
+
+        await refreshProfile(payload.user_id);
+        renderMembers();
+        await loadGlobalMessages();
+        await loadPrivateMessages();
+      })
       .subscribe((status, error) => {
         console.log("Admin chat actions broadcast status:", status);
 
@@ -793,6 +883,7 @@
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
   privateMessageForm.addEventListener("submit", sendPrivateMessage);
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
+  changeNicknameButton.addEventListener("click", changeNickname);
   leaveButton.addEventListener("click", moveToLobby);
   window.addEventListener("beforeunload", cleanupRealtime);
 
