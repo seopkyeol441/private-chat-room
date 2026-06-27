@@ -7,9 +7,8 @@
   const adminMessage = document.querySelector("#admin-message");
   const leaveButton = document.querySelector("#leave-admin-room-button");
   const globalMessageList = document.querySelector("#admin-global-message-list");
-  const privateMessageList = document.querySelector("#admin-private-message-list");
+  const privateChatGrid = document.querySelector("#admin-private-chat-grid");
   const globalMessageForm = document.querySelector("#admin-global-message-form");
-  const privateMessageForm = document.querySelector("#admin-private-message-form");
   const clearGlobalChatButton = document.querySelector("#clear-global-chat-button");
   const changeNicknameButton = document.querySelector("#admin-change-nickname-button");
   const memberList = document.querySelector("#admin-member-list");
@@ -22,7 +21,7 @@
   let currentMember = null;
   let roomMembers = [];
   let profileMap = new Map();
-  let selectedUserId = null;
+  let selectedUserIds = [];
   let messagesChannel = null;
   let membersChannel = null;
   let presenceChannel = null;
@@ -226,17 +225,16 @@
     const participants = roomMembers.filter((member) => member.user_id !== currentUser.id);
 
     if (!participants.length) {
-      selectedUserId = null;
+      selectedUserIds = [];
       memberList.innerHTML = '<p class="empty-state">아직 참가자가 없습니다.</p>';
-      privateDescription.textContent = "참가자가 들어오면 1:1 채팅을 시작할 수 있습니다.";
-      privateMessageList.innerHTML = '<p class="empty-state">참가자를 선택해주세요.</p>';
-      privateMessageForm.classList.add("is-disabled");
+      privateDescription.textContent = "참가자가 들어오면 개인 채팅을 시작할 수 있습니다.";
+      renderPrivateChatPanels();
       return;
     }
 
-    if (!selectedUserId || !participants.some((member) => member.user_id === selectedUserId)) {
-      selectedUserId = participants[0].user_id;
-    }
+    selectedUserIds = selectedUserIds.filter((userId) =>
+      participants.some((member) => member.user_id === userId)
+    );
 
     memberList.innerHTML = "";
 
@@ -261,7 +259,7 @@
       }`;
 
       button.append(name, role);
-      button.classList.toggle("is-active", member.user_id === selectedUserId);
+      button.classList.toggle("is-active", selectedUserIds.includes(member.user_id));
       button.addEventListener("click", () => selectParticipant(member.user_id));
 
       const kickButton = document.createElement("button");
@@ -279,17 +277,31 @@
 
   function updateSelectedParticipant() {
     memberList.querySelectorAll(".member-select-button").forEach((button) => {
-      button.classList.toggle("is-active", button.dataset.userId === selectedUserId);
+      button.classList.toggle("is-active", selectedUserIds.includes(button.dataset.userId));
     });
 
-    privateDescription.textContent = `${getProfileName(selectedUserId)}님과의 1:1 채팅입니다.`;
-    privateMessageForm.classList.remove("is-disabled");
+    if (!selectedUserIds.length) {
+      privateDescription.textContent = "참가자를 최대 4명까지 선택해주세요.";
+    } else {
+      privateDescription.textContent = `${selectedUserIds.length}/4명과 개인 채팅 중입니다.`;
+    }
+
+    renderPrivateChatPanels();
   }
 
   function selectParticipant(userId) {
-    selectedUserId = userId;
+    if (selectedUserIds.includes(userId)) {
+      selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
+    } else {
+      if (selectedUserIds.length >= 4) {
+        showMessage("개인 채팅은 한 번에 최대 4명까지 선택할 수 있습니다.");
+        return;
+      }
+
+      selectedUserIds.push(userId);
+    }
+
     updateSelectedParticipant();
-    loadPrivateMessages();
   }
 
   async function kickParticipant(member) {
@@ -347,8 +359,8 @@
       return;
     }
 
-    if (selectedUserId === member.user_id) {
-      selectedUserId = null;
+    if (selectedUserIds.includes(member.user_id)) {
+      selectedUserIds = selectedUserIds.filter((userId) => userId !== member.user_id);
     }
 
     showMessage(`${memberName}님을 추방했습니다.`, "success");
@@ -518,19 +530,95 @@
     renderMessages(globalMessageList, data || [], "아직 전체 메시지가 없습니다.");
   }
 
-  async function loadPrivateMessages() {
-    if (!selectedUserId) {
-      privateMessageList.innerHTML = '<p class="empty-state">참가자를 선택해주세요.</p>';
+  function renderPrivateChatPanels() {
+    if (!selectedUserIds.length) {
+      privateChatGrid.innerHTML = '<p class="empty-state">개인 채팅을 선택해주세요.</p>';
       return;
     }
 
+    privateChatGrid.innerHTML = "";
+
+    selectedUserIds.forEach((userId) => {
+      const panel = document.createElement("section");
+      panel.className = "private-chat-slot";
+      panel.dataset.userId = userId;
+
+      const header = document.createElement("div");
+      header.className = "private-chat-slot-header";
+
+      const title = document.createElement("strong");
+      title.textContent = getProfileName(userId);
+
+      const closeButton = document.createElement("button");
+      closeButton.className = "message-delete-button";
+      closeButton.type = "button";
+      closeButton.textContent = "×";
+      closeButton.setAttribute("aria-label", "개인 채팅 닫기");
+      closeButton.addEventListener("click", () => closePrivateChat(userId));
+
+      header.append(title, closeButton);
+
+      const messageList = document.createElement("div");
+      messageList.className = "message-list private-message-list private-slot-message-list";
+      messageList.innerHTML = '<p class="empty-state">개인 채팅을 불러오는 중입니다.</p>';
+
+      const form = document.createElement("form");
+      form.className = "message-form private-slot-form";
+
+      const textarea = document.createElement("textarea");
+      textarea.className = "chat-textarea";
+      textarea.name = "content";
+      textarea.placeholder = "개인 메시지 입력";
+      textarea.maxLength = 500;
+      textarea.rows = 2;
+      textarea.required = true;
+
+      const sendButton = document.createElement("button");
+      sendButton.className = "primary-button";
+      sendButton.type = "submit";
+      sendButton.textContent = "전송";
+
+      form.append(textarea, sendButton);
+      form.addEventListener("submit", (event) => sendPrivateMessage(event, userId));
+
+      panel.append(header, messageList, form);
+      privateChatGrid.append(panel);
+
+      loadPrivateMessagesForUser(userId, messageList);
+    });
+  }
+
+  function closePrivateChat(userId) {
+    selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
+    updateSelectedParticipant();
+  }
+
+  async function loadPrivateMessages() {
+    if (!selectedUserIds.length) {
+      renderPrivateChatPanels();
+      return;
+    }
+
+    await Promise.all(
+      selectedUserIds.map(async (userId) => {
+        const panel = privateChatGrid.querySelector(`.private-chat-slot[data-user-id="${userId}"]`);
+        const messageList = panel?.querySelector(".private-slot-message-list");
+
+        if (messageList) {
+          await loadPrivateMessagesForUser(userId, messageList);
+        }
+      })
+    );
+  }
+
+  async function loadPrivateMessagesForUser(userId, messageList) {
     const { data, error } = await supabaseClient
       .from("messages")
       .select("id, sender_id, receiver_id, message_type, content, created_at")
       .eq("room_id", roomId)
       .eq("message_type", "private")
       .or(
-        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedUserId}),and(sender_id.eq.${selectedUserId},receiver_id.eq.${currentUser.id})`
+        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`
       )
       .order("created_at", { ascending: true });
 
@@ -540,7 +628,7 @@
     }
 
     await loadProfiles((data || []).map((message) => message.sender_id));
-    renderMessages(privateMessageList, data || [], "아직 개인 메시지가 없습니다.");
+    renderMessages(messageList, data || [], "아직 개인 메시지가 없습니다.");
   }
 
   async function deleteMessage(messageId) {
@@ -658,16 +746,17 @@
     console.log("Admin global chat cleared broadcast response:", response);
   }
 
-  async function sendPrivateMessage(event) {
+  async function sendPrivateMessage(event, receiverId) {
     event.preventDefault();
     clearMessage();
 
-    if (!selectedUserId) {
+    if (!receiverId) {
       showMessage("개인 메시지를 보낼 참가자를 선택해주세요.");
       return;
     }
 
-    const formData = new FormData(privateMessageForm);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const content = formData.get("content").trim();
 
     if (!content) return;
@@ -675,7 +764,7 @@
     const { error } = await supabaseClient.from("messages").insert({
       room_id: roomId,
       sender_id: currentUser.id,
-      receiver_id: selectedUserId,
+      receiver_id: receiverId,
       message_type: "private",
       content,
     });
@@ -685,7 +774,7 @@
       return;
     }
 
-    privateMessageForm.reset();
+    form.reset();
   }
 
   function subscribeRealtime() {
@@ -881,7 +970,6 @@
   }
 
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
-  privateMessageForm.addEventListener("submit", sendPrivateMessage);
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   changeNicknameButton.addEventListener("click", changeNickname);
   leaveButton.addEventListener("click", moveToLobby);

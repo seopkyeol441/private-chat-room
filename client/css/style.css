@@ -441,6 +441,70 @@ textarea {
   min-height: 0;
 }
 
+.admin-private-chat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.admin-private-chat-grid > .empty-state {
+  grid-column: 1 / -1;
+  align-self: stretch;
+}
+
+.private-chat-slot {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  border: 1px solid #dde5ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.private-chat-slot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.private-chat-slot-header strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #17202a;
+  font-size: 14px;
+}
+
+.private-slot-message-list {
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.private-slot-message-list .chat-message {
+  max-width: 94%;
+}
+
+.private-slot-form {
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 8px;
+}
+
+.private-slot-form textarea {
+  min-height: 58px;
+  resize: none;
+}
+
+.private-slot-form .primary-button {
+  min-width: 0;
+  padding: 0 8px;
+}
+
 .chat-message {
   max-width: 82%;
   padding: 10px 12px;
@@ -847,6 +911,15 @@ textarea {
   .room-layout {
     grid-template-columns: 1fr;
     height: auto;
+  }
+
+  .admin-private-chat-grid {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .private-chat-slot {
+    min-height: 360px;
   }
 
   .room-enter-button {
