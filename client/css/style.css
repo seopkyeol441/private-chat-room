@@ -759,8 +759,8 @@ textarea {
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
-  min-height: 34px;
-  max-height: 34px;
+  min-height: 42px;
+  max-height: 42px;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 2px;
@@ -791,8 +791,10 @@ textarea {
 }
 
 .header-member-list .member-row {
+  align-items: center;
   min-width: 184px;
   max-width: 228px;
+  min-height: 36px;
 }
 
 .header-member-list .member-select-button {
@@ -808,12 +810,16 @@ textarea {
 
 .header-member-list .kick-button {
   flex: 0 0 auto;
-  width: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  align-self: center;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
   padding: 0;
   border-radius: 999px;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
 }
 
