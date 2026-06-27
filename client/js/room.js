@@ -35,8 +35,10 @@
   let messagesChannel = null;
   let membersChannel = null;
   let presenceChannel = null;
+  let kickChannel = null;
   let onlineUserIds = new Set();
   let noteWindowPosition = null;
+  let hasBeenKicked = false;
 
   function showMessage(message, type = "error") {
     roomMessage.textContent = message;
@@ -240,12 +242,7 @@
     // 관리자가 현재 사용자를 추방하면 room_members에서 행이 삭제됩니다.
     // Realtime으로 그 변화를 감지한 뒤 안내 메시지를 보여주고 로비로 이동시킵니다.
     if (currentMember && !isStillMember) {
-      currentMember = null;
-      await loadGlobalMessages();
-      showMessage("관리자에 의해 방에서 추방되었습니다. 잠시 후 로비로 이동합니다.");
-      globalMessageForm.classList.add("is-disabled");
-      privateMessageForm.classList.add("is-disabled");
-      window.setTimeout(moveToLobby, 1800);
+      await handleKickedFromRoom();
       return false;
     }
 
@@ -253,6 +250,20 @@
     renderMemberList();
     renderPrivateChatSelector();
     return true;
+  }
+
+  async function handleKickedFromRoom(message = "관리자에 의해 방에서 추방되었습니다. 잠시 후 로비로 이동합니다.") {
+    if (hasBeenKicked) return;
+
+    hasBeenKicked = true;
+    currentMember = null;
+
+    await loadGlobalMessages();
+    showMessage(message);
+    globalMessageForm.classList.add("is-disabled");
+    privateMessageForm.classList.add("is-disabled");
+    leaveRoomButton.disabled = true;
+    window.setTimeout(moveToLobby, 2200);
   }
 
   function renderMemberList() {
@@ -747,6 +758,23 @@
           });
         }
       });
+
+    kickChannel = supabaseClient
+      .channel(`room-kicks-${roomId}`)
+      .on("broadcast", { event: "player-kicked" }, async ({ payload }) => {
+        console.log("Room kick broadcast:", payload);
+
+        if (payload?.user_id !== currentUser.id) return;
+
+        await handleKickedFromRoom(payload.message);
+      })
+      .subscribe((status, error) => {
+        console.log("Room kick broadcast status:", status);
+
+        if (error) {
+          console.error("Room kick broadcast error:", error);
+        }
+      });
   }
 
   function cleanupRealtime() {
@@ -767,6 +795,12 @@
       presenceChannel = null;
       onlineUserIds = new Set();
       console.log("Room presence channel removed");
+    }
+
+    if (kickChannel) {
+      supabaseClient.removeChannel(kickChannel);
+      kickChannel = null;
+      console.log("Room kick broadcast channel removed");
     }
   }
 

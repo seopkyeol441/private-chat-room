@@ -24,6 +24,7 @@
   let messagesChannel = null;
   let membersChannel = null;
   let presenceChannel = null;
+  let kickChannel = null;
   let onlineUserIds = new Set();
 
   function showMessage(message, type = "error") {
@@ -306,18 +307,22 @@
       return;
     }
 
+    const kickMessage = `${memberName}님이 관리자에 의해 추방되었습니다.`;
+
     const { error: messageError } = await supabaseClient.from("messages").insert({
       room_id: roomId,
       sender_id: currentUser.id,
       receiver_id: null,
       message_type: "global",
-      content: `${memberName}님이 관리자에 의해 추방되었습니다.`,
+      content: kickMessage,
     });
 
     if (messageError) {
       showMessage(getFriendlyError(messageError));
       return;
     }
+
+    await sendKickBroadcast(member.user_id, kickMessage);
 
     if (selectedUserId === member.user_id) {
       selectedUserId = null;
@@ -326,6 +331,22 @@
     showMessage(`${memberName}님을 추방했습니다.`, "success");
     await loadMembers();
     await loadPrivateMessages();
+  }
+
+  async function sendKickBroadcast(userId, message) {
+    if (!kickChannel) return;
+
+    const response = await kickChannel.send({
+      type: "broadcast",
+      event: "player-kicked",
+      payload: {
+        room_id: roomId,
+        user_id: userId,
+        message: `${message} 잠시 후 로비로 이동합니다.`,
+      },
+    });
+
+    console.log("Admin kick broadcast response:", response);
   }
 
   function createMessageElement(message) {
@@ -537,6 +558,16 @@
           });
         }
       });
+
+    kickChannel = supabaseClient
+      .channel(`room-kicks-${roomId}`)
+      .subscribe((status, error) => {
+        console.log("Admin kick broadcast status:", status);
+
+        if (error) {
+          console.error("Admin kick broadcast error:", error);
+        }
+      });
   }
 
   function cleanupRealtime() {
@@ -554,6 +585,11 @@
       supabaseClient.removeChannel(presenceChannel);
       presenceChannel = null;
       onlineUserIds = new Set();
+    }
+
+    if (kickChannel) {
+      supabaseClient.removeChannel(kickChannel);
+      kickChannel = null;
     }
   }
 
