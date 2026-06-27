@@ -684,15 +684,15 @@
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages",
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          console.log("Realtime message INSERT:", payload.new);
+          console.log("Realtime message changed:", payload);
 
-          // 새 메시지가 들어오면 전체 채팅과 현재 선택된 개인 채팅을 모두 다시 불러옵니다.
+          // 메시지가 추가/삭제/수정되면 전체 채팅과 현재 선택된 개인 채팅을 모두 다시 불러옵니다.
           await loadGlobalMessages();
           await loadPrivateMessages();
         }

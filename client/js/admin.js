@@ -10,6 +10,7 @@
   const privateMessageList = document.querySelector("#admin-private-message-list");
   const globalMessageForm = document.querySelector("#admin-global-message-form");
   const privateMessageForm = document.querySelector("#admin-private-message-form");
+  const clearGlobalChatButton = document.querySelector("#clear-global-chat-button");
   const memberList = document.querySelector("#admin-member-list");
   const privateDescription = document.querySelector("#admin-private-description");
 
@@ -460,6 +461,34 @@
     globalMessageForm.reset();
   }
 
+  async function clearGlobalChat() {
+    clearMessage();
+
+    const ok = window.confirm("전체 채팅을 모두 삭제할까요?");
+
+    if (!ok) return;
+
+    clearGlobalChatButton.disabled = true;
+    clearGlobalChatButton.textContent = "삭제 중...";
+
+    const { error } = await supabaseClient
+      .from("messages")
+      .delete()
+      .eq("room_id", roomId)
+      .eq("message_type", "global");
+
+    clearGlobalChatButton.disabled = false;
+    clearGlobalChatButton.textContent = "전체 채팅 삭제";
+
+    if (error) {
+      showMessage(getFriendlyError(error));
+      return;
+    }
+
+    globalMessageList.innerHTML = '<p class="empty-state">아직 전체 메시지가 없습니다.</p>';
+    showMessage("전체 채팅을 삭제했습니다.", "success");
+  }
+
   async function sendPrivateMessage(event) {
     event.preventDefault();
     clearMessage();
@@ -496,13 +525,13 @@
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages",
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          console.log("Admin realtime message INSERT:", payload.new);
+          console.log("Admin realtime message changed:", payload);
           await loadGlobalMessages();
           await loadPrivateMessages();
         }
@@ -639,6 +668,7 @@
 
   globalMessageForm.addEventListener("submit", sendGlobalMessage);
   privateMessageForm.addEventListener("submit", sendPrivateMessage);
+  clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   leaveButton.addEventListener("click", moveToLobby);
   window.addEventListener("beforeunload", cleanupRealtime);
 

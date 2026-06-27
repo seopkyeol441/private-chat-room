@@ -194,6 +194,27 @@ textarea {
   opacity: 0.65;
 }
 
+.danger-button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #f0c6c6;
+  border-radius: 8px;
+  color: #a83232;
+  background: #fff4f4;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.danger-button:hover {
+  border-color: #df8f8f;
+  background: #ffe8e8;
+}
+
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .lobby-page {
   width: min(100%, 1040px);
   margin: 0 auto;
