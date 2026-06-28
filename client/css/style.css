@@ -26,7 +26,15 @@ textarea {
 }
 
 .theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  line-height: 1;
   white-space: nowrap;
+  font-size: 20px;
 }
 
 .header-actions {
