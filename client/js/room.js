@@ -175,6 +175,7 @@
     await addRoomEventMessage(`${roleLabel} ${getProfileName(currentUser.id)}님이 방에서 나갔습니다.`);
     await sendMessageSentBroadcast("global");
     await removeMyPlayerMembership();
+    await sendMemberLeftBroadcast();
     moveToLobby();
   }
 
@@ -1001,6 +1002,26 @@
     });
 
     console.log("Room message sent broadcast response:", response);
+  }
+
+  async function sendMemberLeftBroadcast() {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "member-left",
+      payload: {
+        room_id: roomId,
+        user_id: currentUser.id,
+        left_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Room member left broadcast response:", response);
   }
 
   async function waitForChatActionsChannel() {

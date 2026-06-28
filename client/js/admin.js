@@ -272,6 +272,7 @@
     const participants = roomMembers.filter((member) => member.user_id !== currentUser.id);
 
     selectedUserIds = participants.slice(0, 8).map((member) => member.user_id);
+    floatingPrivateUserIds = floatingPrivateUserIds.filter((userId) => selectedUserIds.includes(userId));
     unreadPrivateUserIds = new Set([...unreadPrivateUserIds].filter((userId) => selectedUserIds.includes(userId)));
     if (!selectedUserIds.includes(activePrivateUserId)) {
       activePrivateUserId = selectedUserIds[0] || null;
@@ -1727,8 +1728,9 @@
       .on("presence", { event: "join" }, ({ key }) => {
         console.log("Admin presence joined:", key);
       })
-      .on("presence", { event: "leave" }, ({ key }) => {
+      .on("presence", { event: "leave" }, async ({ key }) => {
         console.log("Admin presence left:", key);
+        await loadMembers();
       })
       .subscribe(async (status, error) => {
         console.log("Admin presence status:", status);
@@ -1782,6 +1784,15 @@
 
         if (payload?.room_id !== roomId) return;
 
+        await loadGlobalMessages();
+        await loadPrivateMessages();
+      })
+      .on("broadcast", { event: "member-left" }, async ({ payload }) => {
+        console.log("Admin member left broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        await loadMembers();
         await loadGlobalMessages();
         await loadPrivateMessages();
       })
