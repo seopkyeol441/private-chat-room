@@ -1132,7 +1132,7 @@
       lockedPrivateUserIds.delete(userId);
     }
 
-    renderPrivateChatPanels();
+    renderMembers();
     await sendPrivateChatLockBroadcast(userId, shouldLock);
     showMessage(`${getProfileName(userId)}님의 채팅을 ${shouldLock ? "잠금" : "잠금 해제"}했습니다.`, "success");
   }
