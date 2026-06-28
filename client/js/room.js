@@ -183,20 +183,19 @@
   async function removeMyPlayerMembership() {
     if (!currentMember || currentMember.role !== "player") return;
 
-    const { data, error } = await supabaseClient
+    const { count, error } = await supabaseClient
       .from("room_members")
-      .delete()
+      .delete({ count: "exact" })
       .eq("room_id", roomId)
       .eq("user_id", currentUser.id)
-      .eq("role", "player")
-      .select("id");
+      .eq("role", "player");
 
     if (error) {
       showMessage(getFriendlyError(error));
       throw error;
     }
 
-    if (!data?.length) {
+    if (count === 0) {
       const message = "방 나가기 처리에 실패했습니다. room_members 삭제 정책을 확인해주세요.";
       showMessage(message);
       throw new Error(message);
