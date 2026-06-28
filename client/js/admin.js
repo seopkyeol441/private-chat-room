@@ -385,7 +385,7 @@
 
     const parsedMessage = parseMessageContent(message.content);
     const unreadUserIds = parsedMessage.whisper
-      ? [message.sender_id, message.receiver_id].filter((userId) => userId && userId !== currentUser.id)
+      ? [message.sender_id]
       : message.receiver_id === currentUser.id
         ? [message.sender_id]
         : [];
