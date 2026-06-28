@@ -31,6 +31,7 @@
   let roomMembers = [];
   let profileMap = new Map();
   let selectedUserIds = [];
+  let activePrivateUserId = null;
   let lockedPrivateUserIds = new Set();
   let expandedPrivateUserId = null;
   let floatingPrivateUserIds = [];
@@ -269,7 +270,10 @@
   function renderMembers() {
     const participants = roomMembers.filter((member) => member.user_id !== currentUser.id);
 
-    selectedUserIds = participants.map((member) => member.user_id);
+    selectedUserIds = participants.slice(0, 8).map((member) => member.user_id);
+    if (!selectedUserIds.includes(activePrivateUserId)) {
+      activePrivateUserId = selectedUserIds[0] || null;
+    }
 
     if (!participants.length) {
       memberList.innerHTML = '<p class="empty-state">아직 참가자가 없습니다.</p>';
@@ -320,19 +324,27 @@
 
   function updateSelectedParticipant() {
     memberList.querySelectorAll(".member-select-button").forEach((button) => {
-      button.classList.toggle("is-active", false);
+      button.classList.toggle("is-active", button.dataset.userId === activePrivateUserId);
     });
 
     if (!selectedUserIds.length) {
       privateDescription.textContent = "참가자가 들어오면 개인 채팅을 시작할 수 있습니다.";
     } else {
-      privateDescription.textContent = "개인 채팅은 크게 보고, 필요한 대화는 창으로 최대 3개까지 띄울 수 있습니다.";
+      privateDescription.textContent = "숫자 버튼으로 개인 채팅 상대를 바꾸고, 필요한 대화는 창으로 최대 3개까지 띄울 수 있습니다.";
     }
 
     renderPrivateChatPanels();
   }
 
   function selectParticipant(userId) {
+    if (!selectedUserIds.includes(userId)) {
+      showMessage("개인 채팅 숫자 버튼에는 최대 8명까지만 표시됩니다.");
+      return;
+    }
+
+    activePrivateUserId = userId;
+    renderPrivateChatPanels();
+
     const panel = getPrivateChatPanel(userId);
 
     if (panel) {
@@ -772,14 +784,32 @@
       return;
     }
 
+    if (!activePrivateUserId || !selectedUserIds.includes(activePrivateUserId)) {
+      activePrivateUserId = selectedUserIds[0];
+    }
+
     privateChatGrid.innerHTML = "";
 
-    selectedUserIds.forEach((userId) => {
-      const panel = createPrivateChatSurface(userId);
-      privateChatGrid.append(panel);
+    const switcher = document.createElement("div");
+    switcher.className = "private-chat-switcher";
 
-      loadPrivateMessagesForUser(userId, panel.querySelector(".private-slot-message-list"));
+    selectedUserIds.forEach((userId, index) => {
+      const button = document.createElement("button");
+      button.className = "private-chat-number-button";
+      button.type = "button";
+      button.textContent = String(index + 1);
+      button.title = getProfileName(userId);
+      button.setAttribute("aria-label", `${index + 1}번 ${getProfileName(userId)} 개인 채팅 보기`);
+      button.classList.toggle("is-active", userId === activePrivateUserId);
+      button.addEventListener("click", () => selectParticipant(userId));
+      switcher.append(button);
     });
+
+    privateChatGrid.append(switcher);
+
+    const panel = createPrivateChatSurface(activePrivateUserId);
+    privateChatGrid.append(panel);
+    loadPrivateMessagesForUser(activePrivateUserId, panel.querySelector(".private-slot-message-list"));
 
     renderFloatingPrivateChats();
   }
@@ -883,6 +913,9 @@
   function closePrivateChat(userId) {
     selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
     floatingPrivateUserIds = floatingPrivateUserIds.filter((floatingId) => floatingId !== userId);
+    if (activePrivateUserId === userId) {
+      activePrivateUserId = selectedUserIds[0] || null;
+    }
     if (expandedPrivateUserId === userId) {
       expandedPrivateUserId = null;
     }

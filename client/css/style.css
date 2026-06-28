@@ -471,10 +471,8 @@ textarea {
 }
 
 .admin-private-chat-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-auto-rows: minmax(520px, calc(100dvh - 245px));
-  align-content: start;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   flex: 1;
   min-height: 0;
@@ -483,8 +481,31 @@ textarea {
 }
 
 .admin-private-chat-grid > .empty-state {
-  grid-column: 1 / -1;
-  align-self: stretch;
+  flex: 1;
+}
+
+.private-chat-switcher {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.private-chat-number-button {
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  color: #263645;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.private-chat-number-button.is-active {
+  border-color: #1abc9c;
+  color: #ffffff;
+  background: #1abc9c;
 }
 
 .private-chat-slot {
@@ -492,6 +513,7 @@ textarea {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
+  flex: 1 1 auto;
   min-height: 520px;
   height: min(620px, calc(100dvh - 245px));
   overflow: hidden;
