@@ -8,6 +8,7 @@
   const roomList = document.querySelector("#room-list");
   const refreshButton = document.querySelector("#refresh-button");
   const logoutButton = document.querySelector("#logout-button");
+  const deleteAccountButton = document.querySelector("#delete-account-button");
 
   const MAX_PLAYER_COUNT = 8;
 
@@ -15,6 +16,10 @@
   let currentProfile = null;
   let roomsChannel = null;
   let roomMembersChannel = null;
+
+  function createInternalEmail(username) {
+    return `${username}@chat.local`;
+  }
 
   function showMessage(message, type = "error") {
     lobbyMessage.textContent = message;
@@ -473,6 +478,67 @@
     window.location.href = "./login.html";
   }
 
+  function clearMyLocalGalleryItems() {
+    if (!currentUser) return;
+
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith(`privateChatGallery:${currentUser.id}:`))
+      .forEach((key) => localStorage.removeItem(key));
+  }
+
+  async function deleteAccount() {
+    clearMessage();
+
+    if (!currentProfile?.username) {
+      showMessage("프로필 정보를 찾을 수 없어 회원 탈퇴를 진행할 수 없습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "정말로 회원 탈퇴하시겠습니까?\n계정, 프로필, 채팅 기록, 메모, 방 정보가 삭제됩니다."
+    );
+
+    if (!confirmed) return;
+
+    const password = window.prompt("회원 탈퇴를 진행하려면 비밀번호를 입력해주세요.");
+
+    if (!password) {
+      showMessage("비밀번호를 입력해야 회원 탈퇴를 진행할 수 있습니다.");
+      return;
+    }
+
+    setButtonLoading(deleteAccountButton, true, "탈퇴 중...");
+
+    const { error: passwordError } = await supabaseClient.auth.signInWithPassword({
+      email: createInternalEmail(currentProfile.username),
+      password,
+    });
+
+    if (passwordError) {
+      setButtonLoading(deleteAccountButton, false);
+      showMessage("비밀번호가 올바르지 않습니다.");
+      return;
+    }
+
+    const { error } = await supabaseClient.functions.invoke("delete-user-account", {
+      body: { confirm: true },
+    });
+
+    if (error) {
+      setButtonLoading(deleteAccountButton, false);
+      showMessage(
+        "회원 탈퇴 서버 함수(delete-user-account)가 필요합니다. Supabase Edge Function 배포 상태를 확인해주세요."
+      );
+      console.error("Delete account function error:", error);
+      return;
+    }
+
+    clearMyLocalGalleryItems();
+    await supabaseClient.auth.signOut();
+    sessionStorage.setItem("lobbyFlashMessage", "");
+    window.location.href = "./login.html";
+  }
+
   function showFlashMessage() {
     const message = sessionStorage.getItem("lobbyFlashMessage");
     const type = sessionStorage.getItem("lobbyFlashType") || "error";
@@ -506,6 +572,7 @@
   createRoomForm.addEventListener("submit", createRoom);
   refreshButton.addEventListener("click", loadRooms);
   logoutButton.addEventListener("click", logout);
+  deleteAccountButton?.addEventListener("click", deleteAccount);
   window.addEventListener("beforeunload", cleanupRealtime);
 
   initLobby();
