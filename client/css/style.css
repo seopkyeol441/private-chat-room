@@ -37,6 +37,17 @@ textarea {
   font-size: 20px;
 }
 
+.theme-toggle-icon {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+  line-height: 1;
+}
+
+.theme-toggle.is-sun .theme-toggle-icon {
+  transform: translateX(-1px);
+}
+
 .header-actions {
   display: flex;
   flex-wrap: wrap;

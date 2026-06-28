@@ -10,7 +10,8 @@
     const isDark = theme === "dark";
     document.body.classList.toggle(darkClass, isDark);
     document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
-      button.textContent = isDark ? "☀" : "☾";
+      button.innerHTML = `<span class="theme-toggle-icon">${isDark ? "☀" : "☾"}</span>`;
+      button.classList.toggle("is-sun", isDark);
       button.title = isDark ? "라이트 모드" : "다크 모드";
       button.setAttribute("aria-label", isDark ? "라이트 모드로 변경" : "다크 모드로 변경");
       button.setAttribute("aria-pressed", String(isDark));
