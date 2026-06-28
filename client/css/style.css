@@ -668,7 +668,7 @@ textarea {
 }
 
 .private-slot-message-list .chat-message {
-  max-width: 94%;
+  max-width: 78%;
 }
 
 .private-slot-form {
@@ -723,8 +723,9 @@ textarea {
 }
 
 .chat-message {
-  max-width: 82%;
-  padding: 10px 12px;
+  width: fit-content;
+  max-width: 74%;
+  padding: 8px 10px;
   border: 1px solid #d8e1ea;
   border-radius: 8px;
   background: #ffffff;
@@ -756,8 +757,8 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 5px;
+  gap: 6px;
+  margin-bottom: 3px;
 }
 
 .chat-message strong {
@@ -791,7 +792,7 @@ textarea {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   color: #17202a;
-  line-height: 1.45;
+  line-height: 1.38;
 }
 
 .chat-image-message {
