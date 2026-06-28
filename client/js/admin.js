@@ -33,6 +33,7 @@
   let selectedUserIds = [];
   let lockedPrivateUserIds = new Set();
   let expandedPrivateUserId = null;
+  let floatingPrivateUserIds = [];
   let messagesChannel = null;
   let membersChannel = null;
   let presenceChannel = null;
@@ -42,6 +43,8 @@
   let chatActionsChannelReady = false;
   let onlineUserIds = new Set();
   let membersPopoverPosition = null;
+  let floatingPrivatePositions = new Map();
+  let floatingWindowOffset = 0;
 
   function showMessage(message, type = "error") {
     adminMessage.textContent = message;
@@ -323,7 +326,7 @@
     if (!selectedUserIds.length) {
       privateDescription.textContent = "참가자가 들어오면 개인 채팅을 시작할 수 있습니다.";
     } else {
-      privateDescription.textContent = `${selectedUserIds.length}명과 개인 채팅을 한 번에 관리하고 있습니다.`;
+      privateDescription.textContent = "개인 채팅은 크게 보고, 필요한 대화는 창으로 최대 3개까지 띄울 수 있습니다.";
     }
 
     renderPrivateChatPanels();
@@ -765,89 +768,208 @@
   function renderPrivateChatPanels() {
     if (!selectedUserIds.length) {
       privateChatGrid.innerHTML = '<p class="empty-state">개인 채팅을 선택해주세요.</p>';
+      renderFloatingPrivateChats();
       return;
     }
 
     privateChatGrid.innerHTML = "";
 
     selectedUserIds.forEach((userId) => {
-      const panel = document.createElement("section");
-      panel.className = "private-chat-slot";
-      panel.dataset.userId = userId;
-      panel.classList.toggle("is-expanded", expandedPrivateUserId === userId);
-
-      const header = document.createElement("div");
-      header.className = "private-chat-slot-header";
-
-      const title = document.createElement("strong");
-      title.textContent = getProfileName(userId);
-
-      const lockButton = document.createElement("button");
-      lockButton.className = "private-lock-button";
-      lockButton.type = "button";
-      lockButton.textContent = lockedPrivateUserIds.has(userId) ? "잠금 해제" : "잠금";
-      lockButton.classList.toggle("is-locked", lockedPrivateUserIds.has(userId));
-      lockButton.addEventListener("click", () => togglePrivateChatLock(userId));
-
-      header.append(title, lockButton);
-
-      const messageList = document.createElement("div");
-      messageList.className = "message-list private-message-list private-slot-message-list";
-      messageList.innerHTML = '<p class="empty-state">개인 채팅을 불러오는 중입니다.</p>';
-
-      const form = document.createElement("form");
-      form.className = "message-form private-slot-form";
-
-      const textarea = document.createElement("textarea");
-      textarea.className = "chat-textarea";
-      textarea.name = "content";
-      textarea.placeholder = "개인 메시지 입력";
-      textarea.maxLength = 500;
-      textarea.rows = 2;
-      textarea.addEventListener("keydown", submitFormOnEnter);
-
-      const imageButton = document.createElement("label");
-      imageButton.className = "image-upload-button";
-      imageButton.textContent = "사진";
-
-      const imageInput = document.createElement("input");
-      imageInput.type = "file";
-      imageInput.name = "image";
-      imageInput.accept = "image/*";
-      imageInput.addEventListener("change", (event) => handlePrivateImageChange(event, userId));
-
-      imageButton.append(imageInput);
-
-      const sendButton = document.createElement("button");
-      sendButton.className = "primary-button";
-      sendButton.type = "submit";
-      sendButton.textContent = "전송";
-
-      const preview = document.createElement("div");
-      preview.className = "image-preview is-hidden";
-      preview.dataset.userId = userId;
-
-      form.append(textarea, imageButton, sendButton, preview);
-      form.addEventListener("submit", (event) => sendPrivateMessage(event, userId));
-      form.addEventListener("paste", (event) => handlePrivatePaste(event, userId));
-      panel.addEventListener("click", (event) => togglePrivateChatExpanded(event, userId));
-      messageList.addEventListener("dragover", handlePrivateDragOver);
-      messageList.addEventListener("dragleave", handlePrivateDragLeave);
-      messageList.addEventListener("drop", (event) => handlePrivateDrop(event, userId));
-
-      panel.append(header, messageList, form);
+      const panel = createPrivateChatSurface(userId);
       privateChatGrid.append(panel);
 
-      loadPrivateMessagesForUser(userId, messageList);
+      loadPrivateMessagesForUser(userId, panel.querySelector(".private-slot-message-list"));
     });
+
+    renderFloatingPrivateChats();
+  }
+
+  function createPrivateChatSurface(userId, options = {}) {
+    const isFloating = options.isFloating || false;
+    const panel = document.createElement("section");
+    panel.className = isFloating ? "floating-private-chat" : "private-chat-slot";
+    panel.dataset.userId = userId;
+
+    const header = document.createElement("div");
+    header.className = isFloating
+      ? "private-chat-slot-header floating-private-chat-header"
+      : "private-chat-slot-header";
+
+    const title = document.createElement("strong");
+    title.textContent = getProfileName(userId);
+
+    const actions = document.createElement("div");
+    actions.className = "private-chat-actions";
+
+    const lockButton = document.createElement("button");
+    lockButton.className = "private-lock-button";
+    lockButton.type = "button";
+    lockButton.textContent = lockedPrivateUserIds.has(userId) ? "잠금 해제" : "잠금";
+    lockButton.classList.toggle("is-locked", lockedPrivateUserIds.has(userId));
+    lockButton.addEventListener("click", () => togglePrivateChatLock(userId));
+    actions.append(lockButton);
+
+    if (isFloating) {
+      const closeButton = document.createElement("button");
+      closeButton.className = "private-popout-button";
+      closeButton.type = "button";
+      closeButton.textContent = "닫기";
+      closeButton.addEventListener("click", () => closeFloatingPrivateChat(userId));
+      actions.append(closeButton);
+    } else {
+      const popoutButton = document.createElement("button");
+      popoutButton.className = "private-popout-button";
+      popoutButton.type = "button";
+      popoutButton.textContent = "창";
+      popoutButton.title = `${getProfileName(userId)}님 개인 채팅을 창으로 보기`;
+      popoutButton.addEventListener("click", () => openFloatingPrivateChat(userId));
+      actions.append(popoutButton);
+    }
+
+    header.append(title, actions);
+
+    const messageList = document.createElement("div");
+    messageList.className = "message-list private-message-list private-slot-message-list";
+    messageList.innerHTML = '<p class="empty-state">개인 채팅을 불러오는 중입니다.</p>';
+
+    const form = document.createElement("form");
+    form.className = "message-form private-slot-form";
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "chat-textarea";
+    textarea.name = "content";
+    textarea.placeholder = "개인 메시지 입력";
+    textarea.maxLength = 500;
+    textarea.rows = isFloating ? 3 : 4;
+    textarea.addEventListener("keydown", submitFormOnEnter);
+
+    const imageButton = document.createElement("label");
+    imageButton.className = "image-upload-button";
+    imageButton.textContent = "사진";
+
+    const imageInput = document.createElement("input");
+    imageInput.type = "file";
+    imageInput.name = "image";
+    imageInput.accept = "image/*";
+    imageInput.addEventListener("change", (event) => handlePrivateImageChange(event, userId));
+
+    imageButton.append(imageInput);
+
+    const sendButton = document.createElement("button");
+    sendButton.className = "primary-button";
+    sendButton.type = "submit";
+    sendButton.textContent = "전송";
+
+    const preview = document.createElement("div");
+    preview.className = "image-preview is-hidden";
+    preview.dataset.userId = userId;
+
+    form.append(textarea, imageButton, sendButton, preview);
+    form.addEventListener("submit", (event) => sendPrivateMessage(event, userId));
+    form.addEventListener("paste", (event) => handlePrivatePaste(event, userId));
+    messageList.addEventListener("dragover", handlePrivateDragOver);
+    messageList.addEventListener("dragleave", handlePrivateDragLeave);
+    messageList.addEventListener("drop", (event) => handlePrivateDrop(event, userId));
+
+    panel.append(header, messageList, form);
+
+    if (isFloating) {
+      makeFloatingPrivateChatDraggable(panel, header);
+    }
+
+    return panel;
   }
 
   function closePrivateChat(userId) {
     selectedUserIds = selectedUserIds.filter((selectedId) => selectedId !== userId);
+    floatingPrivateUserIds = floatingPrivateUserIds.filter((floatingId) => floatingId !== userId);
     if (expandedPrivateUserId === userId) {
       expandedPrivateUserId = null;
     }
     updateSelectedParticipant();
+  }
+
+  function openFloatingPrivateChat(userId) {
+    if (floatingPrivateUserIds.includes(userId)) {
+      getFloatingPrivateChat(userId)?.focus();
+      return;
+    }
+
+    if (floatingPrivateUserIds.length >= 3) {
+      showMessage("개인 채팅 창은 최대 3개까지 띄울 수 있습니다.");
+      return;
+    }
+
+    floatingPrivateUserIds.push(userId);
+    renderFloatingPrivateChats();
+  }
+
+  function closeFloatingPrivateChat(userId) {
+    floatingPrivateUserIds = floatingPrivateUserIds.filter((floatingId) => floatingId !== userId);
+    floatingPrivatePositions.delete(userId);
+    getFloatingPrivateChat(userId)?.remove();
+  }
+
+  function getFloatingPrivateChat(userId) {
+    return document.querySelector(`.floating-private-chat[data-user-id="${userId}"]`);
+  }
+
+  function renderFloatingPrivateChats() {
+    document.querySelectorAll(".floating-private-chat").forEach((panel) => panel.remove());
+
+    floatingPrivateUserIds = floatingPrivateUserIds.filter((userId) => selectedUserIds.includes(userId));
+
+    floatingPrivateUserIds.forEach((userId, index) => {
+      const panel = createPrivateChatSurface(userId, { isFloating: true });
+      const savedPosition = floatingPrivatePositions.get(userId);
+      const offset = index * 28 + floatingWindowOffset;
+      panel.style.left = savedPosition?.left || `${Math.min(80 + offset, window.innerWidth - 360)}px`;
+      panel.style.top = savedPosition?.top || `${Math.min(100 + offset, window.innerHeight - 320)}px`;
+      panel.style.width = savedPosition?.width || "";
+      panel.style.height = savedPosition?.height || "";
+      panel.tabIndex = -1;
+      document.body.append(panel);
+      panel.addEventListener("mouseup", () => saveFloatingPrivatePosition(userId, panel));
+      loadPrivateMessagesForUser(userId, panel.querySelector(".private-slot-message-list"));
+    });
+  }
+
+  function saveFloatingPrivatePosition(userId, panel) {
+    floatingPrivatePositions.set(userId, {
+      left: panel.style.left,
+      top: panel.style.top,
+      width: panel.style.width || `${panel.offsetWidth}px`,
+      height: panel.style.height || `${panel.offsetHeight}px`,
+    });
+  }
+
+  function makeFloatingPrivateChatDraggable(panel, handle) {
+    handle.addEventListener("mousedown", (event) => {
+      if (event.target.closest("button, input, textarea, label, a")) return;
+
+      const rect = panel.getBoundingClientRect();
+      const offsetX = event.clientX - rect.left;
+      const offsetY = event.clientY - rect.top;
+
+      function movePanel(moveEvent) {
+        const maxLeft = window.innerWidth - panel.offsetWidth - 8;
+        const maxTop = window.innerHeight - panel.offsetHeight - 8;
+        const nextLeft = Math.max(8, Math.min(moveEvent.clientX - offsetX, maxLeft));
+        const nextTop = Math.max(8, Math.min(moveEvent.clientY - offsetY, maxTop));
+
+        panel.style.left = `${nextLeft}px`;
+        panel.style.top = `${nextTop}px`;
+        saveFloatingPrivatePosition(panel.dataset.userId, panel);
+      }
+
+      function stopDragging() {
+        document.removeEventListener("mousemove", movePanel);
+        document.removeEventListener("mouseup", stopDragging);
+      }
+
+      document.addEventListener("mousemove", movePanel);
+      document.addEventListener("mouseup", stopDragging);
+    });
   }
 
   function togglePrivateChatExpanded(event, userId) {
@@ -887,29 +1009,41 @@
     return privateChatGrid.querySelector(`.private-chat-slot[data-user-id="${userId}"]`);
   }
 
-  function getPrivateImageInput(userId) {
-    return getPrivateChatPanel(userId)?.querySelector('input[name="image"]');
+  function getPrivateChatSurface(source, userId) {
+    return (
+      source?.closest?.(".private-chat-slot, .floating-private-chat") ||
+      getPrivateChatPanel(userId) ||
+      getFloatingPrivateChat(userId)
+    );
   }
 
-  function getPrivateImagePreview(userId) {
-    return getPrivateChatPanel(userId)?.querySelector(".image-preview");
+  function getPrivateImageInput(userId, source) {
+    return getPrivateChatSurface(source, userId)?.querySelector('input[name="image"]');
   }
 
-  function setPrivateImageFile(file, userId, sourceLabel) {
+  function getPrivateImagePreview(userId, source) {
+    return getPrivateChatSurface(source, userId)?.querySelector(".image-preview");
+  }
+
+  function setPrivateImageFile(file, userId, sourceLabel, source) {
     if (!file || !file.type.startsWith("image/")) return false;
 
-    const imageInput = getPrivateImageInput(userId);
+    const imageInput = getPrivateImageInput(userId, source);
+    if (!imageInput) return false;
+
     const dataTransfer = new DataTransfer();
 
     dataTransfer.items.add(file);
     imageInput.files = dataTransfer.files;
-    renderPrivateImagePreview(file, userId);
+    renderPrivateImagePreview(file, userId, source);
     showMessage(`${sourceLabel}한 사진이 선택되었습니다. 전송 버튼을 눌러 보내세요.`, "success");
     return true;
   }
 
-  function renderPrivateImagePreview(file, userId) {
-    const preview = getPrivateImagePreview(userId);
+  function renderPrivateImagePreview(file, userId, source) {
+    const preview = getPrivateImagePreview(userId, source);
+    if (!preview) return;
+
     const previewUrl = URL.createObjectURL(file);
 
     preview.innerHTML = "";
@@ -926,13 +1060,13 @@
     const removeButton = document.createElement("button");
     removeButton.type = "button";
     removeButton.textContent = "제거";
-    removeButton.addEventListener("click", () => clearPrivateImageSelection(userId));
+    removeButton.addEventListener("click", () => clearPrivateImageSelection(userId, preview));
 
     preview.append(image, info, removeButton);
   }
 
-  function clearPrivateImagePreview(userId) {
-    const preview = getPrivateImagePreview(userId);
+  function clearPrivateImagePreview(userId, source) {
+    const preview = getPrivateImagePreview(userId, source);
 
     if (!preview) return;
 
@@ -940,30 +1074,30 @@
     preview.classList.add("is-hidden");
   }
 
-  function clearPrivateImageSelection(userId) {
-    const imageInput = getPrivateImageInput(userId);
+  function clearPrivateImageSelection(userId, source) {
+    const imageInput = getPrivateImageInput(userId, source);
 
     if (imageInput) {
       imageInput.value = "";
     }
 
-    clearPrivateImagePreview(userId);
+    clearPrivateImagePreview(userId, source);
   }
 
   function handlePrivateImageChange(event, userId) {
     const file = event.target.files?.[0];
 
     if (file) {
-      renderPrivateImagePreview(file, userId);
+      renderPrivateImagePreview(file, userId, event.target);
     } else {
-      clearPrivateImagePreview(userId);
+      clearPrivateImagePreview(userId, event.target);
     }
   }
 
   function handlePrivatePaste(event, userId) {
     const file = [...(event.clipboardData?.files || [])].find((item) => item.type.startsWith("image/"));
 
-    if (setPrivateImageFile(file, userId, "붙여넣기")) {
+    if (setPrivateImageFile(file, userId, "붙여넣기", event.currentTarget)) {
       event.preventDefault();
     }
   }
@@ -983,7 +1117,7 @@
 
     const file = [...(event.dataTransfer?.files || [])].find((item) => item.type.startsWith("image/"));
 
-    if (!setPrivateImageFile(file, userId, "드래그")) {
+    if (!setPrivateImageFile(file, userId, "드래그", event.currentTarget)) {
       showMessage("이미지 파일만 드래그해서 넣을 수 있습니다.");
     }
   }
@@ -996,12 +1130,19 @@
 
     await Promise.all(
       selectedUserIds.map(async (userId) => {
-        const panel = privateChatGrid.querySelector(`.private-chat-slot[data-user-id="${userId}"]`);
-        const messageList = panel?.querySelector(".private-slot-message-list");
+        const panels = document.querySelectorAll(
+          `.private-chat-slot[data-user-id="${userId}"], .floating-private-chat[data-user-id="${userId}"]`
+        );
 
-        if (messageList) {
-          await loadPrivateMessagesForUser(userId, messageList);
-        }
+        await Promise.all(
+          [...panels].map(async (panel) => {
+            const messageList = panel.querySelector(".private-slot-message-list");
+
+            if (messageList) {
+              await loadPrivateMessagesForUser(userId, messageList);
+            }
+          })
+        );
       })
     );
   }
@@ -1419,7 +1560,7 @@
 
     await sendMessageSentBroadcast("private");
     form.reset();
-    clearPrivateImagePreview(receiverId);
+    clearPrivateImagePreview(receiverId, form);
   }
 
   function subscribeRealtime() {
