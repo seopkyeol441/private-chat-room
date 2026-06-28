@@ -1011,7 +1011,7 @@ textarea {
 
 .header-member-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(156px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   min-height: 34px;
   overflow: hidden;
@@ -1713,7 +1713,7 @@ body.is-dark .image-viewer {
   }
 
   .header-member-list {
-    grid-template-columns: repeat(3, minmax(132px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     overflow: hidden;
   }
 
