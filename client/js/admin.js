@@ -879,9 +879,9 @@
       const button = document.createElement("button");
       button.className = "private-chat-number-button";
       button.type = "button";
-      button.textContent = String(index + 1);
+      button.textContent = getProfileName(userId);
       button.title = getProfileName(userId);
-      button.setAttribute("aria-label", `${index + 1}번 ${getProfileName(userId)} 개인 채팅 보기`);
+      button.setAttribute("aria-label", `${getProfileName(userId)} 개인 채팅 보기`);
       button.classList.toggle("is-active", userId === activePrivateUserId);
       button.classList.toggle("is-unread", unreadPrivateUserIds.has(userId));
       button.addEventListener("click", () => selectParticipant(userId));

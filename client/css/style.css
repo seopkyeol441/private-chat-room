@@ -538,12 +538,16 @@ textarea {
   position: relative;
   min-width: 0;
   min-height: 34px;
+  overflow: hidden;
+  padding: 0 8px;
   border: 1px solid #cfd8e3;
   border-radius: 8px;
   color: #263645;
   background: #ffffff;
   cursor: pointer;
   font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .private-chat-number-button.is-active {
