@@ -971,7 +971,7 @@ textarea {
   position: relative;
   width: auto;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border: 1px solid rgba(23, 32, 42, 0.08);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.72);
@@ -1005,15 +1005,15 @@ textarea {
 }
 
 .header-member-panel h2 {
-  margin: 0 0 6px;
-  font-size: 13px;
+  margin: 0 0 4px;
+  font-size: 12px;
 }
 
 .header-member-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(108px, 1fr));
-  gap: 6px;
-  min-height: 42px;
+  gap: 5px;
+  min-height: 34px;
   overflow: hidden;
 }
 
@@ -1049,15 +1049,15 @@ textarea {
 }
 
 .header-member-list .member-item {
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
   max-width: none;
-  padding: 6px 8px;
+  padding: 4px 7px;
 }
 
 .header-member-list .member-item strong,
 .header-member-list .member-item span {
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .header-member-list .member-row {
@@ -1098,14 +1098,14 @@ textarea {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .member-page-button {
   display: inline-grid;
   place-items: center;
-  width: 26px;
-  height: 24px;
+  width: 24px;
+  height: 21px;
   border: 1px solid #cfd8e3;
   border-radius: 7px;
   color: #263645;
@@ -1123,7 +1123,7 @@ textarea {
 .member-page-label {
   min-width: 40px;
   color: #667789;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   text-align: center;
 }
