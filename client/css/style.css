@@ -1554,6 +1554,15 @@ body.is-dark .chat-message {
   background: #1c2a3a;
 }
 
+body.is-dark .chat-message p,
+body.is-dark .chat-image-message p {
+  color: #e8eef5;
+}
+
+body.is-dark .chat-message strong {
+  color: #76ead7;
+}
+
 body.is-dark .chat-message.is-mine {
   border-color: rgba(26, 188, 156, 0.44);
   background: #123d3a;
@@ -1562,6 +1571,10 @@ body.is-dark .chat-message.is-mine {
 body.is-dark .chat-message.is-system {
   color: #c8d3df;
   background: #263546;
+}
+
+body.is-dark .chat-message.is-system .system-message-text {
+  color: #c8d3df;
 }
 
 body.is-dark .message-delete-button,
