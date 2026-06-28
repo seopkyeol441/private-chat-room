@@ -1611,6 +1611,31 @@ body.is-dark .member-page-label {
   color: #aebccd;
 }
 
+body.is-dark .gallery-item {
+  border-color: rgba(155, 174, 192, 0.18);
+  background: #1a2634;
+}
+
+body.is-dark .gallery-item img {
+  background: #0f1822;
+}
+
+body.is-dark .gallery-actions button {
+  border-color: #3a4b5f;
+  color: #dce6ef;
+  background: #182433;
+}
+
+body.is-dark .gallery-actions button:hover {
+  border-color: #4fd1bd;
+  color: #76ead7;
+}
+
+body.is-dark .gallery-list.is-drag-over {
+  background: #102f2b;
+  box-shadow: inset 0 0 0 2px rgba(110, 231, 207, 0.28);
+}
+
 body.is-dark input,
 body.is-dark textarea {
   border-color: #3a4b5f;
