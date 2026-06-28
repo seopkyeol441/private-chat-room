@@ -121,6 +121,11 @@
     return profile?.nickname || profile?.username || "알 수 없음";
   }
 
+  function getShortName(name, maxLength = 6) {
+    const letters = Array.from(name);
+    return letters.length > maxLength ? `${letters.slice(0, maxLength).join("")}...` : name;
+  }
+
   async function refreshProfile(userId) {
     const { data, error } = await supabaseClient
       .from("profiles")
@@ -420,9 +425,11 @@
       const item = document.createElement("div");
       item.className = "member-item";
 
+      const profileName = getProfileName(member.user_id);
       const name = document.createElement("strong");
+      name.title = profileName;
       name.textContent =
-        member.user_id === currentUser.id ? `${getProfileName(member.user_id)} (나)` : getProfileName(member.user_id);
+        member.user_id === currentUser.id ? `${getShortName(profileName)} (나)` : getShortName(profileName);
 
       const role = document.createElement("span");
       role.className = isOnline(member.user_id)
