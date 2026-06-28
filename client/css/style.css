@@ -1498,6 +1498,23 @@ body.is-dark .header-member-list:not(.admin-member-list) .member-item {
   background: #1a2634;
 }
 
+body.is-dark .header-member-panel {
+  border-color: rgba(155, 174, 192, 0.18);
+  background: rgba(17, 27, 37, 0.82);
+}
+
+body.is-dark .participant-button {
+  border-color: rgba(155, 174, 192, 0.22);
+  color: #dce6ef;
+  background: #1a2634;
+}
+
+body.is-dark .participant-button.is-active {
+  border-color: #6ee7cf;
+  color: #0d1b1f;
+  background: #6ee7cf;
+}
+
 body.is-dark input,
 body.is-dark textarea {
   border-color: #3a4b5f;
