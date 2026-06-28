@@ -57,6 +57,7 @@
   let selectedPrivateUserId = null;
   let selectedWhisperUserId = null;
   let isWhisperPanelOpen = true;
+  let isGlobalChatLocked = false;
   let noteRowId = null;
   let messagesChannel = null;
   let membersChannel = null;
@@ -273,6 +274,7 @@
 
     currentMember = data;
     updateAdminButton();
+    updateGlobalMessageLockUI();
     return true;
   }
 
@@ -689,6 +691,27 @@
       isLocked ? "관리자가 개인 채팅 메시지를 잠갔습니다." : "개인 채팅 메시지 잠금이 해제되었습니다.",
       isLocked ? "error" : "success"
     );
+  }
+
+  function setGlobalChatLocked(isLocked) {
+    isGlobalChatLocked = isLocked;
+    updateGlobalMessageLockUI();
+
+    if (!isAdmin()) {
+      showMessage(
+        isLocked ? "관리자가 전체 채팅을 잠갔습니다." : "전체 채팅 잠금이 해제되었습니다.",
+        isLocked ? "error" : "success"
+      );
+    }
+  }
+
+  function updateGlobalMessageLockUI() {
+    const shouldLock = isGlobalChatLocked && !isAdmin();
+
+    globalMessageForm.classList.toggle("is-private-locked", shouldLock);
+    globalMessageForm.querySelectorAll("textarea, input, button").forEach((control) => {
+      control.disabled = shouldLock;
+    });
   }
 
   function createMessageElement(message) {
@@ -1299,6 +1322,11 @@
   async function sendGlobalMessage(event) {
     event.preventDefault();
     clearMessage();
+
+    if (isGlobalChatLocked && !isAdmin()) {
+      showMessage("관리자가 전체 채팅을 잠갔습니다.");
+      return;
+    }
 
     const formData = new FormData(globalMessageForm);
     const content = formData.get("content").trim();
@@ -1978,6 +2006,13 @@
         if (payload?.room_id !== roomId || payload?.user_id !== currentUser.id) return;
 
         setPrivateChatLocked(Boolean(payload.is_locked));
+      })
+      .on("broadcast", { event: "global-chat-lock-changed" }, async ({ payload }) => {
+        console.log("Room global chat lock changed broadcast:", payload);
+
+        if (payload?.room_id !== roomId) return;
+
+        setGlobalChatLocked(Boolean(payload.is_locked));
       })
       .on("broadcast", { event: "room-deleted" }, async ({ payload }) => {
         console.log("Room deleted broadcast:", payload);

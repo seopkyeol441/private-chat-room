@@ -11,6 +11,7 @@
   const globalMessageForm = document.querySelector("#admin-global-message-form");
   const globalImagePreview = document.querySelector("#admin-global-image-preview");
   const clearGlobalChatButton = document.querySelector("#clear-global-chat-button");
+  const toggleGlobalChatLockButton = document.querySelector("#toggle-global-chat-lock-button");
   const changeNicknameButton = document.querySelector("#admin-change-nickname-button");
   const deleteRoomButton = document.querySelector("#delete-room-button");
   const toggleMembersButton = document.querySelector("#toggle-admin-members-button");
@@ -34,6 +35,7 @@
   let activePrivateUserId = null;
   let unreadPrivateUserIds = new Set();
   let lockedPrivateUserIds = new Set();
+  let isGlobalChatLocked = false;
   let expandedPrivateUserId = null;
   let floatingPrivateUserIds = [];
   let messagesChannel = null;
@@ -1123,6 +1125,20 @@
     showMessage(`${getProfileName(userId)}님의 개인 채팅을 ${shouldLock ? "잠금" : "잠금 해제"}했습니다.`, "success");
   }
 
+  async function toggleGlobalChatLock() {
+    isGlobalChatLocked = !isGlobalChatLocked;
+    updateGlobalChatLockButton();
+    await sendGlobalChatLockBroadcast(isGlobalChatLocked);
+    showMessage(`전체 채팅을 ${isGlobalChatLocked ? "잠금" : "잠금 해제"}했습니다.`, "success");
+  }
+
+  function updateGlobalChatLockButton() {
+    if (!toggleGlobalChatLockButton) return;
+
+    toggleGlobalChatLockButton.textContent = isGlobalChatLocked ? "전체 채팅 잠금 해제" : "전체 채팅 잠금";
+    toggleGlobalChatLockButton.classList.toggle("is-locked", isGlobalChatLocked);
+  }
+
   function getPrivateChatPanel(userId) {
     return privateChatGrid.querySelector(`.private-chat-slot[data-user-id="${userId}"]`);
   }
@@ -1366,6 +1382,27 @@
     });
 
     console.log("Admin private chat lock broadcast response:", response);
+  }
+
+  async function sendGlobalChatLockBroadcast(isLocked) {
+    if (!chatActionsChannel) return;
+
+    if (!chatActionsChannelReady) {
+      await waitForChatActionsChannel();
+    }
+
+    const response = await chatActionsChannel.send({
+      type: "broadcast",
+      event: "global-chat-lock-changed",
+      payload: {
+        room_id: roomId,
+        is_locked: isLocked,
+        changed_by: currentUser.id,
+        changed_at: new Date().toISOString(),
+      },
+    });
+
+    console.log("Admin global chat lock broadcast response:", response);
   }
 
   async function sendGlobalMessage(event) {
@@ -1900,6 +1937,7 @@
   globalMessageList.addEventListener("dragover", handleGlobalDragOver);
   globalMessageList.addEventListener("dragleave", handleGlobalDragLeave);
   globalMessageList.addEventListener("drop", handleGlobalDrop);
+  toggleGlobalChatLockButton?.addEventListener("click", toggleGlobalChatLock);
   clearGlobalChatButton.addEventListener("click", clearGlobalChat);
   changeNicknameButton.addEventListener("click", changeNickname);
   deleteRoomButton.addEventListener("click", deleteRoom);

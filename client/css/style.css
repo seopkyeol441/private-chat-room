@@ -646,6 +646,12 @@ textarea {
   background: #fff1f1;
 }
 
+.global-lock-button.is-locked {
+  border-color: #d94a4a;
+  color: #a83232;
+  background: #fff1f1;
+}
+
 .private-popout-button {
   flex: 0 0 auto;
   min-height: 28px;
@@ -1611,6 +1617,7 @@ body.is-dark .secondary-button,
 body.is-dark .ghost-button,
 body.is-dark .image-upload-button,
 body.is-dark .private-lock-button,
+body.is-dark .global-lock-button,
 body.is-dark .private-popout-button,
 body.is-dark .private-chat-number-button {
   border-color: #3a4b5f;
@@ -1622,9 +1629,16 @@ body.is-dark .secondary-button:hover,
 body.is-dark .ghost-button:hover,
 body.is-dark .image-upload-button:hover,
 body.is-dark .private-lock-button:hover,
+body.is-dark .global-lock-button:hover,
 body.is-dark .private-popout-button:hover {
   border-color: #4fd1bd;
   color: #76ead7;
+}
+
+body.is-dark .global-lock-button.is-locked {
+  border-color: #7d3a42;
+  color: #ffd3d6;
+  background: #4a2028;
 }
 
 body.is-dark .danger-button {
