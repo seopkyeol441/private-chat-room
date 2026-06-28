@@ -1576,9 +1576,14 @@ body.is-dark .room-info h3,
 body.is-dark .panel-header h2,
 body.is-dark .member-item strong,
 body.is-dark .private-chat-slot-header strong,
+body.is-dark .kick-alert-box h2,
 body.is-dark .room-header h1,
 body.is-dark .auth-header h1 {
   color: #f4f8fb;
+}
+
+body.is-dark .kick-alert-box p {
+  color: #c8d4df;
 }
 
 body.is-dark .auth-tabs,
