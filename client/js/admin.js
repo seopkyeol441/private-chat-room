@@ -1122,7 +1122,7 @@
 
     renderPrivateChatPanels();
     await sendPrivateChatLockBroadcast(userId, shouldLock);
-    showMessage(`${getProfileName(userId)}님의 개인 채팅을 ${shouldLock ? "잠금" : "잠금 해제"}했습니다.`, "success");
+    showMessage(`${getProfileName(userId)}님의 채팅을 ${shouldLock ? "잠금" : "잠금 해제"}했습니다.`, "success");
   }
 
   async function toggleGlobalChatLock() {

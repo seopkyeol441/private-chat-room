@@ -676,9 +676,22 @@
       control.disabled = shouldLock;
     });
 
-    if (shouldLock) {
-      privateChatDescription.textContent = "관리자가 개인 채팅 메시지를 잠갔습니다.";
+    if (whisperMessageForm) {
+      whisperMessageForm.classList.toggle("is-private-locked", shouldLock);
+      whisperMessageForm.querySelectorAll("textarea, input, button").forEach((control) => {
+        control.disabled = shouldLock;
+      });
     }
+
+    if (shouldLock) {
+      privateChatDescription.textContent = "관리자가 채팅 메시지를 잠갔습니다.";
+
+      if (whisperChatDescription) {
+        whisperChatDescription.textContent = "관리자가 귓속말 메시지를 잠갔습니다.";
+      }
+    }
+
+    updateGlobalMessageLockUI();
   }
 
   function setPrivateChatLocked(isLocked) {
@@ -686,9 +699,10 @@
     updatePrivateMessageLockUI();
     if (!isLocked) {
       renderPrivateChatSelector();
+      renderWhisperSelector();
     }
     showMessage(
-      isLocked ? "관리자가 개인 채팅 메시지를 잠갔습니다." : "개인 채팅 메시지 잠금이 해제되었습니다.",
+      isLocked ? "관리자가 채팅 메시지를 잠갔습니다." : "채팅 메시지 잠금이 해제되었습니다.",
       isLocked ? "error" : "success"
     );
   }
@@ -706,7 +720,7 @@
   }
 
   function updateGlobalMessageLockUI() {
-    const shouldLock = isGlobalChatLocked && !isAdmin();
+    const shouldLock = (isGlobalChatLocked || privateChatLocked) && !isAdmin();
 
     globalMessageForm.classList.toggle("is-private-locked", shouldLock);
     globalMessageForm.querySelectorAll("textarea, input, button").forEach((control) => {
@@ -1323,8 +1337,8 @@
     event.preventDefault();
     clearMessage();
 
-    if (isGlobalChatLocked && !isAdmin()) {
-      showMessage("관리자가 전체 채팅을 잠갔습니다.");
+    if ((isGlobalChatLocked || privateChatLocked) && !isAdmin()) {
+      showMessage(privateChatLocked ? "관리자가 채팅 메시지를 잠갔습니다." : "관리자가 전체 채팅을 잠갔습니다.");
       return;
     }
 
@@ -1601,6 +1615,11 @@
   async function sendWhisperMessage(event) {
     event.preventDefault();
     clearMessage();
+
+    if (privateChatLocked && !isAdmin()) {
+      showMessage("관리자가 귓속말 메시지를 잠갔습니다.");
+      return;
+    }
 
     if (!selectedWhisperUserId) {
       showMessage("귓속말 상대를 선택해주세요.");
