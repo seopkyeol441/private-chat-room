@@ -56,7 +56,7 @@
   let profileMap = new Map();
   let selectedPrivateUserId = null;
   let selectedWhisperUserId = null;
-  let isWhisperPanelOpen = true;
+  let isWhisperPanelOpen = false;
   let isGlobalChatLocked = false;
   let noteRowId = null;
   let messagesChannel = null;
