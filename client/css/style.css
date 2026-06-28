@@ -42,10 +42,7 @@ textarea {
   width: 1em;
   text-align: center;
   line-height: 1;
-}
-
-.theme-toggle.is-sun .theme-toggle-icon {
-  transform: translateX(-1px);
+  transform: translateX(-2px);
 }
 
 .header-actions {
