@@ -257,7 +257,7 @@
   async function loadMembers() {
     const { data, error } = await supabaseClient
       .from("room_members")
-      .select("id, user_id, role")
+      .select("id, user_id, role, is_locked")
       .eq("room_id", roomId);
 
     if (error) {
@@ -266,6 +266,9 @@
     }
 
     roomMembers = data || [];
+    lockedPrivateUserIds = new Set(
+      roomMembers.filter((member) => member.is_locked).map((member) => member.user_id)
+    );
     await loadProfiles(roomMembers.map((member) => member.user_id));
     renderMembers();
   }
@@ -1125,6 +1128,7 @@
     if (!userId) return;
 
     const shouldLock = !lockedPrivateUserIds.has(userId);
+    const previousLockedUserIds = new Set(lockedPrivateUserIds);
 
     if (shouldLock) {
       lockedPrivateUserIds.add(userId);
@@ -1133,6 +1137,21 @@
     }
 
     renderMembers();
+
+    const { error } = await supabaseClient
+      .from("room_members")
+      .update({ is_locked: shouldLock })
+      .eq("room_id", roomId)
+      .eq("user_id", userId)
+      .eq("role", "player");
+
+    if (error) {
+      lockedPrivateUserIds = previousLockedUserIds;
+      renderMembers();
+      showMessage(getFriendlyError(error));
+      return;
+    }
+
     await sendPrivateChatLockBroadcast(userId, shouldLock);
     showMessage(`${getProfileName(userId)}님의 채팅을 ${shouldLock ? "잠금" : "잠금 해제"}했습니다.`, "success");
   }

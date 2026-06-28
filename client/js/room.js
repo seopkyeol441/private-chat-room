@@ -256,7 +256,7 @@
   async function requireMembership() {
     const { data, error } = await supabaseClient
       .from("room_members")
-      .select("id, room_id, user_id, role")
+      .select("id, room_id, user_id, role, is_locked")
       .eq("room_id", roomId)
       .eq("user_id", currentUser.id)
       .maybeSingle();
@@ -274,6 +274,7 @@
 
     currentMember = data;
     updateAdminButton();
+    setPrivateChatLocked(Boolean(data.is_locked), false);
     updateGlobalMessageLockUI();
     return true;
   }
@@ -347,7 +348,7 @@
   async function loadMembers() {
     const { data, error } = await supabaseClient
       .from("room_members")
-      .select("id, user_id, role")
+      .select("id, user_id, role, is_locked")
       .eq("room_id", roomId);
 
     if (error) {
@@ -364,6 +365,12 @@
     if (currentMember && !isStillMember) {
       await handleKickedFromRoom();
       return false;
+    }
+
+    const myMember = roomMembers.find((member) => member.user_id === currentUser.id);
+    if (myMember) {
+      currentMember = { ...currentMember, ...myMember };
+      setPrivateChatLocked(Boolean(myMember.is_locked), false);
     }
 
     await loadProfiles(roomMembers.map((member) => member.user_id));
@@ -694,17 +701,20 @@
     updateGlobalMessageLockUI();
   }
 
-  function setPrivateChatLocked(isLocked) {
+  function setPrivateChatLocked(isLocked, shouldNotify = true) {
     privateChatLocked = isLocked;
     updatePrivateMessageLockUI();
     if (!isLocked) {
       renderPrivateChatSelector();
       renderWhisperSelector();
     }
-    showMessage(
-      isLocked ? "관리자가 채팅 메시지를 잠갔습니다." : "채팅 메시지 잠금이 해제되었습니다.",
-      isLocked ? "error" : "success"
-    );
+
+    if (shouldNotify) {
+      showMessage(
+        isLocked ? "관리자가 채팅 메시지를 잠갔습니다." : "채팅 메시지 잠금이 해제되었습니다.",
+        isLocked ? "error" : "success"
+      );
+    }
   }
 
   function setGlobalChatLocked(isLocked) {
