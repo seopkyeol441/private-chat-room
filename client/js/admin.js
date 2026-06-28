@@ -382,14 +382,22 @@
   function markUnreadPrivateMessage(message) {
     if (!message || message.message_type !== "private") return;
     if (message.sender_id === currentUser.id) return;
-    if (message.receiver_id !== currentUser.id) return;
 
-    const senderId = message.sender_id;
-    if (!selectedUserIds.includes(senderId)) return;
-    if (senderId === activePrivateUserId) return;
-    if (floatingPrivateUserIds.includes(senderId)) return;
+    const parsedMessage = parseMessageContent(message.content);
+    const unreadUserIds = parsedMessage.whisper
+      ? [message.sender_id, message.receiver_id].filter((userId) => userId && userId !== currentUser.id)
+      : message.receiver_id === currentUser.id
+        ? [message.sender_id]
+        : [];
 
-    unreadPrivateUserIds.add(senderId);
+    unreadUserIds.forEach((userId) => {
+      if (!selectedUserIds.includes(userId)) return;
+      if (userId === activePrivateUserId) return;
+      if (floatingPrivateUserIds.includes(userId)) return;
+
+      unreadPrivateUserIds.add(userId);
+    });
+
     updatePrivateChatSwitchUnreadState();
   }
 
