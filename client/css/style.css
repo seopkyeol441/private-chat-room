@@ -1525,6 +1525,29 @@ body.is-dark .private-popout-button:hover {
   color: #76ead7;
 }
 
+body.is-dark .member-select-button,
+body.is-dark .member-button,
+body.is-dark .participant-button {
+  color: #e8eef5;
+}
+
+body.is-dark .member-select-button strong,
+body.is-dark .member-select-button span,
+body.is-dark .participant-button {
+  color: inherit;
+}
+
+body.is-dark .danger-button {
+  border-color: #7d3a42;
+  color: #ffd3d6;
+  background: #4a2028;
+}
+
+body.is-dark .danger-button:hover {
+  border-color: #b95b65;
+  background: #5b2730;
+}
+
 body.is-dark .chat-message {
   border-color: #34465a;
   color: #e8eef5;
