@@ -1011,7 +1011,7 @@ textarea {
 
 .header-member-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(132px, 1fr));
+  grid-template-columns: repeat(3, minmax(156px, 1fr));
   gap: 5px;
   min-height: 34px;
   overflow: hidden;
@@ -1055,6 +1055,11 @@ textarea {
   max-width: none;
   padding: 4px 7px;
   white-space: nowrap;
+}
+
+.header-member-list:not(.admin-member-list) .member-item {
+  display: grid;
+  grid-template-columns: minmax(6.5em, 1fr) auto;
 }
 
 .header-member-list .member-item strong,
@@ -1703,7 +1708,7 @@ body.is-dark .image-viewer {
   }
 
   .header-member-list {
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
+    grid-template-columns: repeat(3, minmax(132px, 1fr));
     overflow: hidden;
   }
 

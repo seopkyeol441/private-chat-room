@@ -440,9 +440,9 @@
       role.className = isOnline(member.user_id)
         ? "member-status is-online"
         : "member-status is-offline";
-      role.textContent = `${member.role === "admin" ? "관리자" : "플레이어"} · ${
-        isOnline(member.user_id) ? "접속 중" : "오프라인"
-      }`;
+      role.textContent = isAdmin()
+        ? `${member.role === "admin" ? "관리자" : "플레이어"} · ${isOnline(member.user_id) ? "접속 중" : "오프라인"}`
+        : `${member.role === "admin" ? "관리자 · " : ""}${isOnline(member.user_id) ? "접속 중" : "오프라인"}`;
 
       item.append(name, role);
       memberList.append(item);
