@@ -1059,7 +1059,8 @@ textarea {
 
 .header-member-list:not(.admin-member-list) .member-item {
   display: grid;
-  grid-template-columns: minmax(6.5em, 1fr) auto;
+  grid-template-columns: 1fr;
+  align-content: center;
 }
 
 .header-member-list .member-item strong,
@@ -1068,6 +1069,10 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.header-member-list:not(.admin-member-list) .member-item span {
+  justify-self: start;
 }
 
 .header-member-list .member-row {
