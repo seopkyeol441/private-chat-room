@@ -487,6 +487,7 @@
       return;
     }
 
+    const cleanupSucceeded = await deleteKickedPlayerRecords(member.user_id);
     await kickBroadcastPromise;
 
     const { error: messageError } = await supabaseClient.from("messages").insert({
@@ -509,9 +510,43 @@
       selectedUserIds = selectedUserIds.filter((userId) => userId !== member.user_id);
     }
 
-    showMessage(`${memberName}님을 추방했습니다.`, "success");
+    showMessage(
+      cleanupSucceeded
+        ? `${memberName}님을 추방하고 개인 기록을 삭제했습니다.`
+        : `${memberName}님을 추방했지만 일부 개인 기록 삭제에 실패했습니다. Supabase 삭제 정책을 확인해주세요.`,
+      cleanupSucceeded ? "success" : "error"
+    );
     await loadMembers();
     await loadPrivateMessages();
+  }
+
+  async function deleteKickedPlayerRecords(userId) {
+    const results = await Promise.allSettled([
+      supabaseClient
+        .from("messages")
+        .delete()
+        .eq("room_id", roomId)
+        .eq("message_type", "private")
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`),
+      supabaseClient.from("private_notes").delete().eq("room_id", roomId).eq("user_id", userId),
+    ]);
+
+    let succeeded = true;
+
+    results.forEach((result) => {
+      if (result.status === "rejected") {
+        console.error("Kicked player cleanup failed:", result.reason);
+        succeeded = false;
+        return;
+      }
+
+      if (result.value?.error) {
+        console.error("Kicked player cleanup error:", result.value.error);
+        succeeded = false;
+      }
+    });
+
+    return succeeded;
   }
 
   async function sendKickBroadcast(userId, message) {

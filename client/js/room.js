@@ -183,17 +183,23 @@
   async function removeMyPlayerMembership() {
     if (!currentMember || currentMember.role !== "player") return;
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("room_members")
       .delete()
-      .eq("id", currentMember.id)
       .eq("room_id", roomId)
       .eq("user_id", currentUser.id)
-      .eq("role", "player");
+      .eq("role", "player")
+      .select("id");
 
     if (error) {
       showMessage(getFriendlyError(error));
       throw error;
+    }
+
+    if (!data?.length) {
+      const message = "방 나가기 처리에 실패했습니다. room_members 삭제 정책을 확인해주세요.";
+      showMessage(message);
+      throw new Error(message);
     }
 
     currentMember = null;
@@ -355,6 +361,8 @@
     globalMessageForm.classList.add("is-disabled");
     privateMessageForm.classList.add("is-disabled");
     leaveRoomButton.disabled = true;
+    await deleteMyPrivateNote();
+    clearGalleryItems();
     showKickAlert(message);
 
     loadGlobalMessages();
