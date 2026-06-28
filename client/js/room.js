@@ -126,6 +126,12 @@
     return letters.length > maxLength ? `${letters.slice(0, maxLength).join("")}...` : name;
   }
 
+  function getMemberListName(member) {
+    const profileName = getProfileName(member.user_id);
+    const displayName = isAdmin() ? profileName : getShortName(profileName);
+    return member.user_id === currentUser.id ? `${displayName} (나)` : displayName;
+  }
+
   async function refreshProfile(userId) {
     const { data, error } = await supabaseClient
       .from("profiles")
@@ -428,8 +434,7 @@
       const profileName = getProfileName(member.user_id);
       const name = document.createElement("strong");
       name.title = profileName;
-      name.textContent =
-        member.user_id === currentUser.id ? `${getShortName(profileName)} (나)` : getShortName(profileName);
+      name.textContent = getMemberListName(member);
 
       const role = document.createElement("span");
       role.className = isOnline(member.user_id)
