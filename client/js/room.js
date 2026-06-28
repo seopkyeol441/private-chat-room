@@ -1,4 +1,4 @@
-// 방 화면 전용 스크립트입니다.
+﻿// 방 화면 전용 스크립트입니다.
 // 방 입장 권한 확인, 전체 채팅, 개인 채팅, 개인 메모, Realtime 갱신을 담당합니다.
 (() => {
   const supabaseClient = window.supabaseClient;
@@ -174,10 +174,30 @@
     const roleLabel = isAdmin() ? "관리자" : "플레이어";
     await addRoomEventMessage(`${roleLabel} ${getProfileName(currentUser.id)}님이 방에서 나갔습니다.`);
     await sendMessageSentBroadcast("global");
+    await removeMyPlayerMembership();
     moveToLobby();
   }
 
   // URL에 roomId가 없으면 어떤 방인지 알 수 없으므로 로비로 돌려보냅니다.
+
+  async function removeMyPlayerMembership() {
+    if (!currentMember || currentMember.role !== "player") return;
+
+    const { error } = await supabaseClient
+      .from("room_members")
+      .delete()
+      .eq("id", currentMember.id)
+      .eq("room_id", roomId)
+      .eq("user_id", currentUser.id)
+      .eq("role", "player");
+
+    if (error) {
+      showMessage(getFriendlyError(error));
+      throw error;
+    }
+
+    currentMember = null;
+  }
   function requireRoomId() {
     if (!roomId) {
       showMessage("방 정보를 찾을 수 없습니다.");
