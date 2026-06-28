@@ -28,6 +28,7 @@
   const noteResizeHandle = document.querySelector("#note-resize-handle");
   const toggleNoteButton = document.querySelector("#toggle-note-button");
   const toggleGalleryButton = document.querySelector("#toggle-gallery-button");
+  const toggleWhisperButton = document.querySelector("#toggle-whisper-button");
   const galleryBody = document.querySelector("#gallery-body");
   const galleryWindowHeader = document.querySelector("#gallery-window-header");
   const galleryList = document.querySelector("#gallery-list");
@@ -55,6 +56,7 @@
   let profileMap = new Map();
   let selectedPrivateUserId = null;
   let selectedWhisperUserId = null;
+  let isWhisperPanelOpen = true;
   let noteRowId = null;
   let messagesChannel = null;
   let membersChannel = null;
@@ -565,10 +567,12 @@
 
     if (isAdmin()) {
       whisperPanel.classList.add("is-hidden");
+      toggleWhisperButton?.classList.add("is-hidden");
       return;
     }
 
-    whisperPanel.classList.remove("is-hidden");
+    toggleWhisperButton?.classList.remove("is-hidden");
+    updateWhisperPanelVisibility();
     whisperParticipantList.innerHTML = "";
 
     const players = roomMembers.filter(
@@ -604,6 +608,18 @@
     whisperChatDescription.textContent = `${getProfileName(selectedWhisperUserId)}님과의 귓속말입니다.`;
     whisperMessageForm.classList.remove("is-disabled");
     loadWhisperMessages();
+  }
+
+  function updateWhisperPanelVisibility() {
+    if (!whisperPanel || !toggleWhisperButton) return;
+
+    whisperPanel.classList.toggle("is-hidden", !isWhisperPanelOpen);
+    toggleWhisperButton.textContent = isWhisperPanelOpen ? "귓속말 끄기" : "귓속말 켜기";
+  }
+
+  function toggleWhisperPanel() {
+    isWhisperPanelOpen = !isWhisperPanelOpen;
+    updateWhisperPanelVisibility();
   }
 
   function updateActiveParticipant() {
@@ -2081,6 +2097,7 @@
   whisperMessageForm?.querySelector('textarea[name="content"]')?.addEventListener("keydown", submitFormOnEnter);
   toggleNoteButton.addEventListener("click", togglePrivateNote);
   toggleGalleryButton.addEventListener("click", toggleGallery);
+  toggleWhisperButton?.addEventListener("click", toggleWhisperPanel);
   closeGalleryButton.addEventListener("click", closeGallery);
   galleryPrevButton.addEventListener("click", showPreviousGalleryPage);
   galleryNextButton.addEventListener("click", showNextGalleryPage);
