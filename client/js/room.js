@@ -16,6 +16,7 @@
   const privateImagePreview = document.querySelector("#private-image-preview");
   const participantList = document.querySelector("#participant-list");
   const memberList = document.querySelector("#member-list");
+  const headerMemberPanel = document.querySelector(".header-member-panel");
   const privateChatDescription = document.querySelector("#private-chat-description");
   const noteBody = document.querySelector("#note-body");
   const noteWindowHeader = document.querySelector("#note-window-header");
@@ -59,6 +60,7 @@
   let noteWindowPosition = null;
   let galleryWindowPosition = null;
   let galleryPage = 0;
+  let memberPage = 0;
   let membershipCheckTimer = null;
   let hasBeenKicked = false;
   let privateChatLocked = false;
@@ -403,12 +405,18 @@
   function renderMemberList() {
     if (!roomMembers.length) {
       memberList.innerHTML = '<p class="empty-state">참가자가 없습니다.</p>';
+      renderMemberPager(0);
       return;
     }
 
     memberList.innerHTML = "";
 
-    roomMembers.forEach((member) => {
+    const pageSize = 3;
+    const totalPages = Math.ceil(roomMembers.length / pageSize);
+    memberPage = Math.min(memberPage, Math.max(totalPages - 1, 0));
+    const visibleMembers = roomMembers.slice(memberPage * pageSize, memberPage * pageSize + pageSize);
+
+    visibleMembers.forEach((member) => {
       const item = document.createElement("div");
       item.className = "member-item";
 
@@ -427,6 +435,53 @@
       item.append(name, role);
       memberList.append(item);
     });
+
+    renderMemberPager(totalPages);
+  }
+
+  function renderMemberPager(totalPages) {
+    if (!headerMemberPanel) return;
+
+    let pager = headerMemberPanel.querySelector(".member-pager");
+
+    if (totalPages <= 1) {
+      pager?.remove();
+      return;
+    }
+
+    if (!pager) {
+      pager = document.createElement("div");
+      pager.className = "member-pager";
+      headerMemberPanel.append(pager);
+    }
+
+    pager.innerHTML = "";
+
+    const prevButton = document.createElement("button");
+    prevButton.className = "member-page-button";
+    prevButton.type = "button";
+    prevButton.textContent = "<";
+    prevButton.disabled = memberPage === 0;
+    prevButton.addEventListener("click", () => {
+      memberPage = Math.max(memberPage - 1, 0);
+      renderMemberList();
+    });
+
+    const pageLabel = document.createElement("span");
+    pageLabel.className = "member-page-label";
+    pageLabel.textContent = `${memberPage + 1} / ${totalPages}`;
+
+    const nextButton = document.createElement("button");
+    nextButton.className = "member-page-button";
+    nextButton.type = "button";
+    nextButton.textContent = ">";
+    nextButton.disabled = memberPage >= totalPages - 1;
+    nextButton.addEventListener("click", () => {
+      memberPage = Math.min(memberPage + 1, totalPages - 1);
+      renderMemberList();
+    });
+
+    pager.append(prevButton, pageLabel, nextButton);
   }
 
   function renderPrivateChatSelector() {

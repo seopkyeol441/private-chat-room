@@ -1010,14 +1010,11 @@ textarea {
 }
 
 .header-member-list {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(108px, 1fr));
   gap: 6px;
   min-height: 42px;
-  max-height: 42px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 2px;
+  overflow: hidden;
 }
 
 .admin-member-list {
@@ -1052,10 +1049,9 @@ textarea {
 }
 
 .header-member-list .member-item {
-  flex: 0 0 auto;
   gap: 6px;
-  min-width: 132px;
-  max-width: 178px;
+  min-width: 0;
+  max-width: none;
   padding: 6px 8px;
 }
 
@@ -1095,6 +1091,41 @@ textarea {
   border-radius: 999px;
   font-size: 15px;
   line-height: 1;
+}
+
+.member-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.member-page-button {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
+  color: #263645;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.member-page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.member-page-label {
+  min-width: 40px;
+  color: #667789;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
 }
 
 .header-member-list.admin-member-list .member-row {
@@ -1515,6 +1546,16 @@ body.is-dark .participant-button.is-active {
   background: #6ee7cf;
 }
 
+body.is-dark .member-page-button {
+  border-color: rgba(155, 174, 192, 0.22);
+  color: #dce6ef;
+  background: #1a2634;
+}
+
+body.is-dark .member-page-label {
+  color: #aebccd;
+}
+
 body.is-dark input,
 body.is-dark textarea {
   border-color: #3a4b5f;
@@ -1657,10 +1698,8 @@ body.is-dark .image-viewer {
   }
 
   .header-member-list {
-    flex-wrap: wrap;
-    max-height: none;
-    overflow-x: visible;
-    overflow-y: visible;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: hidden;
   }
 
   .note-popover {
