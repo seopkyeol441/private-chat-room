@@ -56,6 +56,7 @@
   let profileMap = new Map();
   let selectedPrivateUserId = null;
   let selectedWhisperUserId = null;
+  let unreadWhisperUserIds = new Set();
   let isWhisperPanelOpen = false;
   let isGlobalChatLocked = false;
   let noteRowId = null;
@@ -581,6 +582,9 @@
       return;
     }
 
+    unreadWhisperUserIds = new Set([...unreadWhisperUserIds].filter((userId) => (
+      roomMembers.some((member) => member.user_id === userId && member.role !== "admin")
+    )));
     toggleWhisperButton?.classList.remove("is-hidden");
     updateWhisperPanelVisibility();
     whisperParticipantList.innerHTML = "";
@@ -607,6 +611,7 @@
         isOnline(member.user_id) ? "접속 중" : "오프라인"
       }`;
       button.classList.toggle("is-active", member.user_id === selectedWhisperUserId);
+      button.classList.toggle("is-unread", unreadWhisperUserIds.has(member.user_id));
       button.addEventListener("click", () => selectWhisperUser(member.user_id));
       whisperParticipantList.append(button);
     });
@@ -625,11 +630,16 @@
 
     whisperPanel.classList.toggle("is-hidden", !isWhisperPanelOpen);
     toggleWhisperButton.textContent = isWhisperPanelOpen ? "귓속말 끄기" : "귓속말 켜기";
+    updateWhisperUnreadState();
   }
 
   function toggleWhisperPanel() {
     isWhisperPanelOpen = !isWhisperPanelOpen;
     updateWhisperPanelVisibility();
+    if (isWhisperPanelOpen && selectedWhisperUserId) {
+      unreadWhisperUserIds.delete(selectedWhisperUserId);
+      updateWhisperUnreadState();
+    }
   }
 
   function updateActiveParticipant() {
@@ -653,6 +663,7 @@
 
   function selectWhisperUser(userId) {
     selectedWhisperUserId = userId;
+    unreadWhisperUserIds.delete(userId);
 
     whisperParticipantList.querySelectorAll(".participant-button").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.userId === userId);
@@ -660,6 +671,7 @@
 
     whisperChatDescription.textContent = `${getProfileName(userId)}님과의 귓속말입니다.`;
     whisperMessageForm.classList.remove("is-disabled");
+    updateWhisperUnreadState();
     loadWhisperMessages();
   }
 
@@ -674,6 +686,27 @@
   function renderEmptyWhisperMessages(message) {
     if (!whisperMessageList) return;
     whisperMessageList.innerHTML = `<p class="empty-state">${message}</p>`;
+  }
+
+  function updateWhisperUnreadState() {
+    const hasUnread = unreadWhisperUserIds.size > 0;
+
+    toggleWhisperButton?.classList.toggle("is-unread", !isWhisperPanelOpen && hasUnread);
+    whisperParticipantList?.querySelectorAll(".participant-button").forEach((button) => {
+      button.classList.toggle("is-unread", unreadWhisperUserIds.has(button.dataset.userId));
+    });
+  }
+
+  function markUnreadWhisperMessage(message) {
+    if (!message || message.message_type !== "private") return;
+    if (message.receiver_id !== currentUser.id) return;
+    if (message.sender_id === currentUser.id) return;
+    if (!isWhisperMessage(message)) return;
+
+    if (isWhisperPanelOpen && message.sender_id === selectedWhisperUserId) return;
+
+    unreadWhisperUserIds.add(message.sender_id);
+    updateWhisperUnreadState();
   }
 
   function updatePrivateMessageLockUI() {
@@ -1912,6 +1945,10 @@
         },
         async (payload) => {
           console.log("Realtime message changed:", payload);
+
+          if (payload.eventType === "INSERT") {
+            markUnreadWhisperMessage(payload.new);
+          }
 
           // 메시지가 추가/삭제/수정되면 전체 채팅과 현재 선택된 개인 채팅을 모두 다시 불러옵니다.
           await loadGlobalMessages();

@@ -562,13 +562,18 @@ textarea {
   background: #1abc9c;
 }
 
-.private-chat-number-button.is-unread {
+.private-chat-number-button.is-unread,
+.participant-button.is-unread,
+#toggle-whisper-button.is-unread {
+  position: relative;
   border-color: #e74c3c;
   color: #b83224;
   background: #fff4f2;
 }
 
-.private-chat-number-button.is-unread::after {
+.private-chat-number-button.is-unread::after,
+.participant-button.is-unread::after,
+#toggle-whisper-button.is-unread::after {
   content: "";
   position: absolute;
   top: 5px;
@@ -579,7 +584,8 @@ textarea {
   background: #e74c3c;
 }
 
-.private-chat-number-button.is-active::after {
+.private-chat-number-button.is-active::after,
+.participant-button.is-active::after {
   display: none;
 }
 
@@ -1628,6 +1634,14 @@ body.is-dark .participant-button.is-active {
   border-color: #6ee7cf;
   color: #0d1b1f;
   background: #6ee7cf;
+}
+
+body.is-dark .participant-button.is-unread,
+body.is-dark #toggle-whisper-button.is-unread,
+body.is-dark .private-chat-number-button.is-unread {
+  border-color: #ff7676;
+  color: #ffd3d6;
+  background: #3a1f29;
 }
 
 body.is-dark .member-page-button {
