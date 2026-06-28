@@ -528,7 +528,13 @@
         .delete()
         .eq("room_id", roomId)
         .eq("message_type", "private")
-        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`),
+        .eq("sender_id", userId),
+      supabaseClient
+        .from("messages")
+        .delete()
+        .eq("room_id", roomId)
+        .eq("message_type", "private")
+        .eq("receiver_id", userId),
       supabaseClient.from("private_notes").delete().eq("room_id", roomId).eq("user_id", userId),
     ]);
 
