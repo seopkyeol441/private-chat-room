@@ -652,6 +652,10 @@ textarea {
   background: #fff1f1;
 }
 
+.global-lock-button + #clear-global-chat-button {
+  margin-left: -8px;
+}
+
 .private-popout-button {
   flex: 0 0 auto;
   min-height: 28px;
