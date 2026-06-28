@@ -679,15 +679,13 @@
 
     messageHeader.append(author);
 
-    if (isMine) {
-      const deleteButton = document.createElement("button");
-      deleteButton.className = "message-delete-button";
-      deleteButton.type = "button";
-      deleteButton.textContent = "×";
-      deleteButton.setAttribute("aria-label", "메시지 삭제");
-      deleteButton.addEventListener("click", () => deleteMessage(message.id));
-      messageHeader.append(deleteButton);
-    }
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "message-delete-button";
+    deleteButton.type = "button";
+    deleteButton.textContent = "×";
+    deleteButton.setAttribute("aria-label", "메시지 삭제");
+    deleteButton.addEventListener("click", () => deleteMessage(message.id));
+    messageHeader.append(deleteButton);
 
     const content = createMessageContentElement(parsedMessage);
 
@@ -1276,8 +1274,7 @@
       .from("messages")
       .delete()
       .eq("id", messageId)
-      .eq("room_id", roomId)
-      .eq("sender_id", currentUser.id);
+      .eq("room_id", roomId);
 
     if (error) {
       showMessage(getFriendlyError(error));
