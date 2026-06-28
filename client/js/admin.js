@@ -855,6 +855,16 @@
 
     expandedPrivateUserId = expandedPrivateUserId === userId ? null : userId;
     renderPrivateChatPanels();
+
+    if (expandedPrivateUserId) {
+      window.requestAnimationFrame(() => {
+        getPrivateChatPanel(expandedPrivateUserId)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      });
+    }
   }
 
   async function togglePrivateChatLock(userId) {
