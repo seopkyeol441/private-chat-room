@@ -1011,7 +1011,7 @@ textarea {
 
 .header-member-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(108px, 1fr));
+  grid-template-columns: repeat(3, minmax(132px, 1fr));
   gap: 5px;
   min-height: 34px;
   overflow: hidden;
@@ -1053,11 +1053,15 @@ textarea {
   min-width: 0;
   max-width: none;
   padding: 4px 7px;
+  white-space: nowrap;
 }
 
 .header-member-list .member-item strong,
 .header-member-list .member-item span {
   font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-member-list .member-row {
@@ -1698,7 +1702,7 @@ body.is-dark .image-viewer {
   }
 
   .header-member-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
     overflow: hidden;
   }
 
