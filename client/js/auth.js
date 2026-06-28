@@ -78,6 +78,29 @@
     );
   }
 
+  async function restoreProfileForExistingUser(username, password, nickname) {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: createInternalEmail(username),
+      password,
+    });
+
+    if (error) {
+      return { error };
+    }
+
+    if (!data.user) {
+      return { error: new Error("Auth 계정을 찾지 못했습니다.") };
+    }
+
+    const { error: profileError } = await upsertProfile(data.user, username, nickname, "player");
+
+    if (profileError) {
+      return { error: profileError };
+    }
+
+    return { data };
+  }
+
   // username 규칙은 클라이언트에서 먼저 검사해 불필요한 Supabase 요청을 줄입니다.
   function validateUsername(username) {
     if (!username) {
@@ -197,6 +220,20 @@
     });
 
     if (signUpError) {
+      if ((signUpError.message || "").includes("User already registered")) {
+        const { error: restoreError } = await restoreProfileForExistingUser(username, password, nickname);
+
+        setFormLoading(signupForm, false);
+
+        if (restoreError) {
+          showMessage("이미 있는 아이디입니다. 비밀번호가 맞으면 프로필을 복구할 수 있습니다.");
+          return;
+        }
+
+        window.location.href = "./lobby.html";
+        return;
+      }
+
       setFormLoading(signupForm, false);
       showMessage(getFriendlyError(signUpError));
       return;
