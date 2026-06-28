@@ -1493,21 +1493,9 @@ body.is-dark .member-select-button.is-active {
   box-shadow: none;
 }
 
-body.is-dark .admin-member-list .member-row,
-body.is-dark .admin-member-list .member-select-button {
+body.is-dark .header-member-list:not(.admin-member-list) .member-item {
   border-color: rgba(155, 174, 192, 0.18);
-  color: #17202a;
-  background: #9aa8b6;
-}
-
-body.is-dark .admin-member-list .member-select-button strong,
-body.is-dark .admin-member-list .member-select-button span {
-  color: inherit;
-}
-
-body.is-dark .admin-member-list .member-select-button.is-active {
-  color: #17202a;
-  background: #8797a8;
+  background: #1a2634;
 }
 
 body.is-dark input,
