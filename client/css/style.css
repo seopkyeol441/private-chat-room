@@ -997,9 +997,21 @@ textarea {
 .admin-member-list {
   display: grid;
   flex-wrap: nowrap;
+  gap: 8px;
   max-height: min(430px, 58vh);
   overflow-x: hidden;
   overflow-y: auto;
+  padding-right: 2px;
+}
+
+.admin-member-list .member-row {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+.admin-member-list .member-select-button {
+  width: 100%;
 }
 
 .member-item {
@@ -1057,6 +1069,16 @@ textarea {
   border-radius: 999px;
   font-size: 15px;
   line-height: 1;
+}
+
+.header-member-list.admin-member-list .member-row {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.header-member-list.admin-member-list .member-select-button {
+  width: 100%;
 }
 
 .member-button {
