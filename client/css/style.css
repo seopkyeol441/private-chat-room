@@ -1246,6 +1246,30 @@ textarea {
   background: #ffe8e8;
 }
 
+.member-lock-button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
+  color: #263645;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.member-lock-button:hover {
+  border-color: #1abc9c;
+  color: #0f7f6a;
+}
+
+.member-lock-button.is-locked {
+  border-color: #d94a4a;
+  color: #a83232;
+  background: #fff1f1;
+}
+
 .member-item strong {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -1653,6 +1677,7 @@ body.is-dark .ghost-button,
 body.is-dark .image-upload-button,
 body.is-dark .private-lock-button,
 body.is-dark .global-lock-button,
+body.is-dark .member-lock-button,
 body.is-dark .private-popout-button,
 body.is-dark .private-chat-number-button {
   border-color: #3a4b5f;
@@ -1665,12 +1690,19 @@ body.is-dark .ghost-button:hover,
 body.is-dark .image-upload-button:hover,
 body.is-dark .private-lock-button:hover,
 body.is-dark .global-lock-button:hover,
+body.is-dark .member-lock-button:hover,
 body.is-dark .private-popout-button:hover {
   border-color: #4fd1bd;
   color: #76ead7;
 }
 
 body.is-dark .global-lock-button.is-locked {
+  border-color: #7d3a42;
+  color: #ffd3d6;
+  background: #4a2028;
+}
+
+body.is-dark .member-lock-button.is-locked {
   border-color: #7d3a42;
   color: #ffd3d6;
   background: #4a2028;

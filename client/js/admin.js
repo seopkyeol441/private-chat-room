@@ -312,6 +312,18 @@
       button.append(name, role);
       button.addEventListener("click", () => selectParticipant(member.user_id));
 
+      const lockButton = document.createElement("button");
+      lockButton.className = "member-lock-button";
+      lockButton.type = "button";
+      lockButton.textContent = lockedPrivateUserIds.has(member.user_id) ? "해제" : "잠금";
+      lockButton.title = `${getMemberName(member)}님 채팅 ${lockedPrivateUserIds.has(member.user_id) ? "잠금 해제" : "잠금"}`;
+      lockButton.setAttribute(
+        "aria-label",
+        `${getMemberName(member)}님 채팅 ${lockedPrivateUserIds.has(member.user_id) ? "잠금 해제" : "잠금"}`
+      );
+      lockButton.classList.toggle("is-locked", lockedPrivateUserIds.has(member.user_id));
+      lockButton.addEventListener("click", () => togglePrivateChatLock(member.user_id));
+
       const kickButton = document.createElement("button");
       kickButton.className = "kick-button";
       kickButton.type = "button";
@@ -320,7 +332,7 @@
       kickButton.setAttribute("aria-label", `${getMemberName(member)}님 추방`);
       kickButton.addEventListener("click", () => kickParticipant(member));
 
-      item.append(button, kickButton);
+      item.append(button, lockButton, kickButton);
       memberList.append(item);
     });
 
