@@ -32,6 +32,7 @@
   let profileMap = new Map();
   let selectedUserIds = [];
   let activePrivateUserId = null;
+  let unreadPrivateUserIds = new Set();
   let lockedPrivateUserIds = new Set();
   let expandedPrivateUserId = null;
   let floatingPrivateUserIds = [];
@@ -271,6 +272,7 @@
     const participants = roomMembers.filter((member) => member.user_id !== currentUser.id);
 
     selectedUserIds = participants.slice(0, 8).map((member) => member.user_id);
+    unreadPrivateUserIds = new Set([...unreadPrivateUserIds].filter((userId) => selectedUserIds.includes(userId)));
     if (!selectedUserIds.includes(activePrivateUserId)) {
       activePrivateUserId = selectedUserIds[0] || null;
     }
@@ -343,6 +345,7 @@
     }
 
     activePrivateUserId = userId;
+    unreadPrivateUserIds.delete(userId);
     renderPrivateChatPanels();
 
     const panel = getPrivateChatPanel(userId);
@@ -354,6 +357,27 @@
         panel.classList.remove("is-highlighted");
       }, 900);
     }
+  }
+
+  function markUnreadPrivateMessage(message) {
+    if (!message || message.message_type !== "private") return;
+    if (message.sender_id === currentUser.id) return;
+    if (message.receiver_id !== currentUser.id) return;
+
+    const senderId = message.sender_id;
+    if (!selectedUserIds.includes(senderId)) return;
+    if (senderId === activePrivateUserId) return;
+    if (floatingPrivateUserIds.includes(senderId)) return;
+
+    unreadPrivateUserIds.add(senderId);
+    updatePrivateChatSwitchUnreadState();
+  }
+
+  function updatePrivateChatSwitchUnreadState() {
+    privateChatGrid.querySelectorAll(".private-chat-number-button").forEach((button, index) => {
+      const userId = selectedUserIds[index];
+      button.classList.toggle("is-unread", unreadPrivateUserIds.has(userId));
+    });
   }
 
   function toggleMembersPopover() {
@@ -801,6 +825,7 @@
       button.title = getProfileName(userId);
       button.setAttribute("aria-label", `${index + 1}번 ${getProfileName(userId)} 개인 채팅 보기`);
       button.classList.toggle("is-active", userId === activePrivateUserId);
+      button.classList.toggle("is-unread", unreadPrivateUserIds.has(userId));
       button.addEventListener("click", () => selectParticipant(userId));
       switcher.append(button);
     });
@@ -934,7 +959,9 @@
     }
 
     floatingPrivateUserIds.push(userId);
+    unreadPrivateUserIds.delete(userId);
     renderFloatingPrivateChats();
+    updatePrivateChatSwitchUnreadState();
   }
 
   function closeFloatingPrivateChat(userId) {
@@ -1609,6 +1636,9 @@
         },
         async (payload) => {
           console.log("Admin realtime message changed:", payload);
+          if (payload.eventType === "INSERT") {
+            markUnreadPrivateMessage(payload.new);
+          }
           await loadGlobalMessages();
           await loadPrivateMessages();
         }

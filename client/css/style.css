@@ -492,6 +492,7 @@ textarea {
 }
 
 .private-chat-number-button {
+  position: relative;
   min-width: 0;
   min-height: 34px;
   border: 1px solid #cfd8e3;
@@ -506,6 +507,27 @@ textarea {
   border-color: #1abc9c;
   color: #ffffff;
   background: #1abc9c;
+}
+
+.private-chat-number-button.is-unread {
+  border-color: #e74c3c;
+  color: #b83224;
+  background: #fff4f2;
+}
+
+.private-chat-number-button.is-unread::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e74c3c;
+}
+
+.private-chat-number-button.is-active::after {
+  display: none;
 }
 
 .private-chat-slot {
