@@ -488,10 +488,13 @@ textarea {
 }
 
 .private-chat-slot {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
   min-height: 255px;
+  height: 255px;
+  overflow: hidden;
   padding: 10px;
   border: 1px solid #dde5ee;
   border-radius: 8px;
@@ -499,8 +502,11 @@ textarea {
 }
 
 .private-chat-slot.is-expanded {
+  order: -1;
+  z-index: 2;
   grid-column: 1 / -1;
-  min-height: min(420px, calc(100dvh - 260px));
+  min-height: 0;
+  height: min(430px, calc(100dvh - 230px));
 }
 
 .private-chat-slot.is-highlighted {
@@ -560,7 +566,7 @@ textarea {
 .private-slot-form textarea {
   grid-column: 1 / -1;
   min-height: 54px;
-  resize: vertical;
+  resize: none;
 }
 
 .private-chat-slot.is-expanded .private-slot-form textarea {
