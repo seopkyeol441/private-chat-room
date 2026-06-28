@@ -9,6 +9,9 @@
   <body>
     <main class="auth-page">
       <section class="auth-panel" aria-labelledby="auth-title">
+        <button class="theme-toggle" data-theme-toggle type="button" aria-pressed="false">
+          다크 모드
+        </button>
         <div class="auth-header">
           <p class="auth-kicker">Private Chat Room</p>
           <h1 id="auth-title">로그인</h1>
@@ -126,6 +129,7 @@
     <!-- Supabase 브라우저 SDK를 먼저 불러온 뒤, 프로젝트 설정과 인증 로직을 연결합니다. -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/supabase.js"></script>
+    <script src="./js/theme.js"></script>
     <script src="./js/auth.js"></script>
   </body>
 </html>
