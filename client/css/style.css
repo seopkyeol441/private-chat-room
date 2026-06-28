@@ -29,6 +29,12 @@ textarea {
   white-space: nowrap;
 }
 
+.auth-panel > .theme-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
 .header-actions {
   display: flex;
   flex-wrap: wrap;
@@ -44,6 +50,7 @@ textarea {
 }
 
 .auth-panel {
+  position: relative;
   width: min(100%, 440px);
   padding: 32px;
   border: 1px solid rgba(23, 32, 42, 0.08);
@@ -53,6 +60,7 @@ textarea {
 }
 
 .auth-header {
+  padding-right: 96px;
   margin-bottom: 24px;
 }
 
