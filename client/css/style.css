@@ -38,11 +38,46 @@ textarea {
 }
 
 .theme-toggle-icon {
+  position: relative;
   display: inline-block;
-  width: 1em;
-  text-align: center;
-  line-height: 1;
-  transform: translateX(-2px);
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.theme-toggle-icon::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.theme-toggle.is-sun .theme-toggle-icon {
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  box-shadow:
+    0 -9px 0 -5px currentColor,
+    0 9px 0 -5px currentColor,
+    9px 0 0 -5px currentColor,
+    -9px 0 0 -5px currentColor,
+    6px 6px 0 -5px currentColor,
+    -6px -6px 0 -5px currentColor,
+    6px -6px 0 -5px currentColor,
+    -6px 6px 0 -5px currentColor;
+}
+
+.theme-toggle.is-sun .theme-toggle-icon::after {
+  display: none;
+}
+
+body.is-dark .theme-toggle-icon::after {
+  background: #182433;
 }
 
 .header-actions {
