@@ -9,9 +9,12 @@
   const refreshButton = document.querySelector("#refresh-button");
   const logoutButton = document.querySelector("#logout-button");
 
+  const MAX_PLAYER_COUNT = 8;
+
   let currentUser = null;
   let currentProfile = null;
   let roomsChannel = null;
+  let roomMembersChannel = null;
 
   function showMessage(message, type = "error") {
     lobbyMessage.textContent = message;
@@ -80,6 +83,54 @@
 
   function moveToAdmin(roomId) {
     window.location.href = `./admin.html?roomId=${encodeURIComponent(roomId)}`;
+  }
+
+  async function getPlayerCountByRoomIds(roomIds) {
+    const countMap = new Map(roomIds.map((roomId) => [roomId, 0]));
+
+    if (!roomIds.length) {
+      return countMap;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("room_members")
+      .select("room_id")
+      .in("room_id", roomIds)
+      .eq("role", "player");
+
+    if (error) {
+      throw error;
+    }
+
+    (data || []).forEach((member) => {
+      countMap.set(member.room_id, (countMap.get(member.room_id) || 0) + 1);
+    });
+
+    return countMap;
+  }
+
+  async function getMyMembershipRoleByRoomIds(roomIds) {
+    const roleMap = new Map();
+
+    if (!roomIds.length) {
+      return roleMap;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("room_members")
+      .select("room_id, role")
+      .in("room_id", roomIds)
+      .eq("user_id", currentUser.id);
+
+    if (error) {
+      throw error;
+    }
+
+    (data || []).forEach((member) => {
+      roleMap.set(member.room_id, member.role);
+    });
+
+    return roleMap;
   }
 
   async function addRoomEventMessage(roomId, message) {
@@ -167,16 +218,25 @@
       const title = document.createElement("h3");
       title.textContent = room.title;
 
+      const playerCount = Number(room.player_count || 0);
+      const isFull = playerCount >= MAX_PLAYER_COUNT;
+      const isAlreadyMember = Boolean(room.my_role);
+
       const code = document.createElement("p");
       code.textContent = `코드 ${room.code}`;
+
+      const count = document.createElement("p");
+      count.className = isFull ? "room-player-count is-full" : "room-player-count";
+      count.textContent = `플레이어 ${playerCount}/${MAX_PLAYER_COUNT}`;
 
       const enterButton = document.createElement("button");
       enterButton.className = "primary-button room-enter-button";
       enterButton.type = "button";
-      enterButton.textContent = "입장";
+      enterButton.textContent = isFull && !isAlreadyMember ? "가득 참" : "입장";
+      enterButton.disabled = isFull && !isAlreadyMember;
       enterButton.addEventListener("click", () => enterRoom(room.id, enterButton));
 
-      info.append(title, code);
+      info.append(title, code, count);
       item.append(info, enterButton);
       roomList.append(item);
     });
@@ -186,9 +246,7 @@
   async function loadRooms() {
     renderEmptyRooms("방 목록을 불러오는 중입니다.");
 
-    const { data, error } = await supabaseClient
-      .from("rooms")
-      .select("id, title, code");
+    const { data, error } = await supabaseClient.from("rooms").select("id, title, code");
 
     if (error) {
       showMessage(getFriendlyError(error));
@@ -196,11 +254,25 @@
       return;
     }
 
-    renderRooms(data || []);
+    try {
+      const rooms = data || [];
+      const playerCountMap = await getPlayerCountByRoomIds(rooms.map((room) => room.id));
+      const myRoleMap = await getMyMembershipRoleByRoomIds(rooms.map((room) => room.id));
+      const roomsWithCounts = rooms.map((room) => ({
+        ...room,
+        player_count: playerCountMap.get(room.id) || 0,
+        my_role: myRoleMap.get(room.id) || null,
+      }));
+
+      renderRooms(roomsWithCounts);
+    } catch (countError) {
+      showMessage(getFriendlyError(countError));
+      renderRooms((data || []).map((room) => ({ ...room, player_count: 0 })));
+    }
   }
 
   function subscribeRoomsRealtime() {
-    if (roomsChannel) return;
+    if (roomsChannel || roomMembersChannel) return;
 
     roomsChannel = supabaseClient
       .channel("lobby-rooms")
@@ -223,13 +295,40 @@
           console.error("Lobby rooms realtime error:", error);
         }
       });
+
+    roomMembersChannel = supabaseClient
+      .channel("lobby-room-members")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "room_members",
+        },
+        async (payload) => {
+          console.log("Lobby room members realtime changed:", payload);
+          await loadRooms();
+        }
+      )
+      .subscribe((status, error) => {
+        console.log("Lobby room members realtime status:", status);
+
+        if (error) {
+          console.error("Lobby room members realtime error:", error);
+        }
+      });
   }
 
   function cleanupRealtime() {
-    if (!roomsChannel) return;
+    if (roomsChannel) {
+      supabaseClient.removeChannel(roomsChannel);
+      roomsChannel = null;
+    }
 
-    supabaseClient.removeChannel(roomsChannel);
-    roomsChannel = null;
+    if (roomMembersChannel) {
+      supabaseClient.removeChannel(roomMembersChannel);
+      roomMembersChannel = null;
+    }
   }
 
   // 방 생성 후 만든 사용자를 room_members에 admin으로 추가하고 바로 관리자 화면으로 이동합니다.
@@ -264,13 +363,11 @@
       return;
     }
 
-    const { error: memberError } = await supabaseClient
-      .from("room_members")
-      .insert({
-        room_id: room.id,
-        user_id: currentUser.id,
-        role: "admin",
-      });
+    const { error: memberError } = await supabaseClient.from("room_members").insert({
+      room_id: room.id,
+      user_id: currentUser.id,
+      role: "admin",
+    });
 
     setButtonLoading(submitButton, false);
 
@@ -299,11 +396,12 @@
     return data;
   }
 
-  async function getMemberCount(roomId) {
+  async function getPlayerCount(roomId) {
     const { count, error } = await supabaseClient
       .from("room_members")
       .select("id", { count: "exact", head: true })
-      .eq("room_id", roomId);
+      .eq("room_id", roomId)
+      .eq("role", "player");
 
     if (error) {
       throw error;
@@ -312,7 +410,7 @@
     return count || 0;
   }
 
-  // 방 정원이 8명인지 확인한 뒤, 새 사용자는 player 역할로 room_members에 추가합니다.
+  // 관리자를 제외하고 플레이어가 8명인지 확인한 뒤 입장시킵니다.
   async function enterRoom(roomId, button) {
     clearMessage();
     setButtonLoading(button, true, "입장 중...");
@@ -332,11 +430,12 @@
         return;
       }
 
-      const memberCount = await getMemberCount(roomId);
+      const playerCount = await getPlayerCount(roomId);
 
-      if (memberCount >= 8) {
-        showMessage("이 방은 정원이 가득 찼습니다.");
+      if (playerCount >= MAX_PLAYER_COUNT) {
+        showMessage("방이 가득 찼습니다. 플레이어는 최대 8명까지만 입장할 수 있습니다.");
         setButtonLoading(button, false);
+        await loadRooms();
         return;
       }
 
