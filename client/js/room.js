@@ -15,6 +15,11 @@
   const privateMessageForm = document.querySelector("#private-message-form");
   const privateImagePreview = document.querySelector("#private-image-preview");
   const participantList = document.querySelector("#participant-list");
+  const whisperPanel = document.querySelector("#whisper-panel");
+  const whisperParticipantList = document.querySelector("#whisper-participant-list");
+  const whisperMessageList = document.querySelector("#whisper-message-list");
+  const whisperMessageForm = document.querySelector("#whisper-message-form");
+  const whisperChatDescription = document.querySelector("#whisper-chat-description");
   const memberList = document.querySelector("#member-list");
   const headerMemberPanel = document.querySelector(".header-member-panel");
   const privateChatDescription = document.querySelector("#private-chat-description");
@@ -49,6 +54,7 @@
   let roomMembers = [];
   let profileMap = new Map();
   let selectedPrivateUserId = null;
+  let selectedWhisperUserId = null;
   let noteRowId = null;
   let messagesChannel = null;
   let membersChannel = null;
@@ -359,6 +365,7 @@
     await loadProfiles(roomMembers.map((member) => member.user_id));
     renderMemberList();
     renderPrivateChatSelector();
+    renderWhisperSelector();
     return true;
   }
 
@@ -553,6 +560,52 @@
     loadPrivateMessages();
   }
 
+  function renderWhisperSelector() {
+    if (!whisperPanel || !whisperParticipantList || !whisperMessageForm) return;
+
+    if (isAdmin()) {
+      whisperPanel.classList.add("is-hidden");
+      return;
+    }
+
+    whisperPanel.classList.remove("is-hidden");
+    whisperParticipantList.innerHTML = "";
+
+    const players = roomMembers.filter(
+      (member) => member.user_id !== currentUser.id && member.role !== "admin"
+    );
+
+    if (!players.length) {
+      selectedWhisperUserId = null;
+      whisperParticipantList.innerHTML = '<p class="empty-state">귓속말을 보낼 플레이어가 없습니다.</p>';
+      whisperChatDescription.textContent = "다른 플레이어가 들어오면 귓속말을 보낼 수 있습니다.";
+      whisperMessageForm.classList.add("is-disabled");
+      renderEmptyWhisperMessages("귓속말 상대가 없습니다.");
+      return;
+    }
+
+    players.forEach((member) => {
+      const button = document.createElement("button");
+      button.className = "participant-button";
+      button.type = "button";
+      button.dataset.userId = member.user_id;
+      button.textContent = `${getProfileName(member.user_id)} · ${
+        isOnline(member.user_id) ? "접속 중" : "오프라인"
+      }`;
+      button.classList.toggle("is-active", member.user_id === selectedWhisperUserId);
+      button.addEventListener("click", () => selectWhisperUser(member.user_id));
+      whisperParticipantList.append(button);
+    });
+
+    if (!selectedWhisperUserId || !players.some((member) => member.user_id === selectedWhisperUserId)) {
+      selectedWhisperUserId = players[0].user_id;
+    }
+
+    whisperChatDescription.textContent = `${getProfileName(selectedWhisperUserId)}님과의 귓속말입니다.`;
+    whisperMessageForm.classList.remove("is-disabled");
+    loadWhisperMessages();
+  }
+
   function updateActiveParticipant() {
     participantList.querySelectorAll(".participant-button").forEach((button) => {
       button.classList.toggle(
@@ -572,12 +625,29 @@
     loadPrivateMessages();
   }
 
+  function selectWhisperUser(userId) {
+    selectedWhisperUserId = userId;
+
+    whisperParticipantList.querySelectorAll(".participant-button").forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.userId === userId);
+    });
+
+    whisperChatDescription.textContent = `${getProfileName(userId)}님과의 귓속말입니다.`;
+    whisperMessageForm.classList.remove("is-disabled");
+    loadWhisperMessages();
+  }
+
   function renderEmptyGlobalMessages(message) {
     globalMessageList.innerHTML = `<p class="empty-state">${message}</p>`;
   }
 
   function renderEmptyPrivateMessages(message) {
     privateMessageList.innerHTML = `<p class="empty-state">${message}</p>`;
+  }
+
+  function renderEmptyWhisperMessages(message) {
+    if (!whisperMessageList) return;
+    whisperMessageList.innerHTML = `<p class="empty-state">${message}</p>`;
   }
 
   function updatePrivateMessageLockUI() {
@@ -616,7 +686,7 @@
       return item;
     }
 
-    item.className = `chat-message${isMine ? " is-mine" : ""}`;
+    item.className = `chat-message${isMine ? " is-mine" : ""}${parsedMessage.whisper ? " is-whisper" : ""}`;
 
     const messageHeader = document.createElement("div");
     messageHeader.className = "message-header";
@@ -625,6 +695,13 @@
     author.textContent = isMine ? "나" : getProfileName(message.sender_id);
 
     messageHeader.append(author);
+
+    if (parsedMessage.whisper) {
+      const whisperBadge = document.createElement("span");
+      whisperBadge.className = "message-badge";
+      whisperBadge.textContent = "귓속말";
+      messageHeader.append(whisperBadge);
+    }
 
     if (isMine) {
       const deleteButton = document.createElement("button");
@@ -653,11 +730,22 @@
       if (parsed?.kind === "system" && parsed.text) {
         return parsed;
       }
+
+      if (parsed?.kind === "whisper" && parsed.message) {
+        return {
+          ...parsed.message,
+          whisper: true,
+        };
+      }
     } catch (error) {
       // 기존 텍스트 메시지는 JSON이 아니므로 그대로 표시합니다.
     }
 
     return { kind: "text", text: content };
+  }
+
+  function isWhisperMessage(message) {
+    return parseMessageContent(message.content).whisper === true;
   }
 
   function createMessageContentElement(messageContent) {
@@ -1006,7 +1094,34 @@
       return;
     }
 
-    renderMessages(privateMessageList, data || [], "아직 개인 메시지가 없습니다.");
+    renderMessages(privateMessageList, (data || []).filter((message) => !isWhisperMessage(message)), "아직 개인 메시지가 없습니다.");
+  }
+
+  async function loadWhisperMessages() {
+    if (!whisperMessageList) return;
+
+    if (!selectedWhisperUserId) {
+      renderEmptyWhisperMessages("귓속말 상대가 없습니다.");
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("messages")
+      .select("id, sender_id, receiver_id, message_type, content, created_at")
+      .eq("room_id", roomId)
+      .eq("message_type", "private")
+      .or(
+        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedWhisperUserId}),and(sender_id.eq.${selectedWhisperUserId},receiver_id.eq.${currentUser.id})`
+      )
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      showMessage(getFriendlyError(error));
+      renderEmptyWhisperMessages("귓속말을 불러오지 못했습니다.");
+      return;
+    }
+
+    renderMessages(whisperMessageList, (data || []).filter(isWhisperMessage), "아직 귓속말이 없습니다.");
   }
 
   async function deleteMessage(messageId) {
@@ -1027,6 +1142,7 @@
     await sendMessageDeletedBroadcast(messageId);
     await loadGlobalMessages();
     await loadPrivateMessages();
+    await loadWhisperMessages();
   }
 
   async function sendMessageDeletedBroadcast(messageId) {
@@ -1438,6 +1554,44 @@
     clearPrivateImagePreview();
   }
 
+  async function sendWhisperMessage(event) {
+    event.preventDefault();
+    clearMessage();
+
+    if (!selectedWhisperUserId) {
+      showMessage("귓속말 상대를 선택해주세요.");
+      return;
+    }
+
+    const formData = new FormData(whisperMessageForm);
+    const content = formData.get("content").trim();
+
+    if (!content) return;
+
+    const { error } = await supabaseClient.from("messages").insert({
+      room_id: roomId,
+      sender_id: currentUser.id,
+      receiver_id: selectedWhisperUserId,
+      message_type: "private",
+      content: JSON.stringify({
+        kind: "whisper",
+        message: {
+          kind: "text",
+          text: content,
+        },
+      }),
+    });
+
+    if (error) {
+      showMessage(getFriendlyError(error));
+      return;
+    }
+
+    await sendMessageSentBroadcast("private");
+    whisperMessageForm.reset();
+    await loadWhisperMessages();
+  }
+
   async function loadPrivateNote() {
     const { data, error } = await supabaseClient
       .from("private_notes")
@@ -1688,6 +1842,7 @@
           // 메시지가 추가/삭제/수정되면 전체 채팅과 현재 선택된 개인 채팅을 모두 다시 불러옵니다.
           await loadGlobalMessages();
           await loadPrivateMessages();
+          await loadWhisperMessages();
         }
       )
       .subscribe((status, error) => {
@@ -1790,6 +1945,7 @@
 
         await loadGlobalMessages();
         await loadPrivateMessages();
+        await loadWhisperMessages();
       })
       .on("broadcast", { event: "message-sent" }, async ({ payload }) => {
         console.log("Room message sent broadcast:", payload);
@@ -1798,6 +1954,7 @@
 
         await loadGlobalMessages();
         await loadPrivateMessages();
+        await loadWhisperMessages();
       })
       .on("broadcast", { event: "private-chat-lock-changed" }, async ({ payload }) => {
         console.log("Room private chat lock changed broadcast:", payload);
@@ -1825,8 +1982,10 @@
         await refreshProfile(payload.user_id);
         renderMemberList();
         renderPrivateChatSelector();
+        renderWhisperSelector();
         await loadGlobalMessages();
         await loadPrivateMessages();
+        await loadWhisperMessages();
       })
       .subscribe((status, error) => {
         console.log("Room chat actions broadcast status:", status);
@@ -1918,6 +2077,8 @@
   privateMessageList.addEventListener("dragover", handlePrivateDragOver);
   privateMessageList.addEventListener("dragleave", handlePrivateDragLeave);
   privateMessageList.addEventListener("drop", handlePrivateDrop);
+  whisperMessageForm?.addEventListener("submit", sendWhisperMessage);
+  whisperMessageForm?.querySelector('textarea[name="content"]')?.addEventListener("keydown", submitFormOnEnter);
   toggleNoteButton.addEventListener("click", togglePrivateNote);
   toggleGalleryButton.addEventListener("click", toggleGallery);
   closeGalleryButton.addEventListener("click", closeGallery);

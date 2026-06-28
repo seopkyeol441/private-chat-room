@@ -669,15 +669,26 @@
       return item;
     }
 
-    item.className = `chat-message${isMine ? " is-mine" : ""}`;
+    item.className = `chat-message${isMine ? " is-mine" : ""}${parsedMessage.whisper ? " is-whisper" : ""}`;
 
     const messageHeader = document.createElement("div");
     messageHeader.className = "message-header";
 
     const author = document.createElement("strong");
-    author.textContent = isMine ? "나" : getProfileName(message.sender_id);
+    author.textContent = parsedMessage.whisper
+      ? `${getProfileName(message.sender_id)} → ${getProfileName(message.receiver_id)}`
+      : isMine
+        ? "나"
+        : getProfileName(message.sender_id);
 
     messageHeader.append(author);
+
+    if (parsedMessage.whisper) {
+      const whisperBadge = document.createElement("span");
+      whisperBadge.className = "message-badge";
+      whisperBadge.textContent = "귓속말";
+      messageHeader.append(whisperBadge);
+    }
 
     const deleteButton = document.createElement("button");
     deleteButton.className = "message-delete-button";
@@ -703,6 +714,13 @@
 
       if (parsed?.kind === "system" && parsed.text) {
         return parsed;
+      }
+
+      if (parsed?.kind === "whisper" && parsed.message) {
+        return {
+          ...parsed.message,
+          whisper: true,
+        };
       }
     } catch (error) {
       // 湲곗〈 ?띿뒪??硫붿떆吏??JSON???꾨땲誘濡?洹몃?濡??쒖떆?⑸땲??
@@ -1253,9 +1271,7 @@
       .select("id, sender_id, receiver_id, message_type, content, created_at")
       .eq("room_id", roomId)
       .eq("message_type", "private")
-      .or(
-        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUser.id})`
-      )
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order("created_at", { ascending: true });
 
     if (error) {
@@ -1263,7 +1279,9 @@
       return;
     }
 
-    await loadProfiles((data || []).map((message) => message.sender_id));
+    await loadProfiles([
+      ...new Set((data || []).flatMap((message) => [message.sender_id, message.receiver_id]).filter(Boolean)),
+    ]);
     renderMessages(messageList, data || [], "아직 개인 메시지가 없습니다.");
   }
 
