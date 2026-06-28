@@ -293,7 +293,7 @@
   async function loadRoom() {
     const { data, error } = await supabaseClient
       .from("rooms")
-      .select("id, title, code")
+      .select("id, title, code, is_global_locked")
       .eq("id", roomId)
       .maybeSingle();
 
@@ -311,6 +311,7 @@
     currentRoom = data;
     roomTitle.textContent = currentRoom.title;
     roomCode.textContent = currentRoom.code;
+    setGlobalChatLocked(Boolean(currentRoom.is_global_locked), false);
     return true;
   }
 
@@ -717,11 +718,11 @@
     }
   }
 
-  function setGlobalChatLocked(isLocked) {
+  function setGlobalChatLocked(isLocked, shouldNotify = true) {
     isGlobalChatLocked = isLocked;
     updateGlobalMessageLockUI();
 
-    if (!isAdmin()) {
+    if (shouldNotify && !isAdmin()) {
       showMessage(
         isLocked ? "관리자가 전체 채팅을 잠갔습니다." : "전체 채팅 잠금이 해제되었습니다.",
         isLocked ? "error" : "success"

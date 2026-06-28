@@ -213,7 +213,7 @@
   async function loadRoom() {
     const { data, error } = await supabaseClient
       .from("rooms")
-      .select("id, title, code")
+      .select("id, title, code, is_global_locked")
       .eq("id", roomId)
       .maybeSingle();
 
@@ -230,6 +230,8 @@
 
     roomTitle.textContent = data.title;
     roomCode.textContent = data.code;
+    isGlobalChatLocked = Boolean(data.is_global_locked);
+    updateGlobalChatLockButton();
     return true;
   }
 
@@ -1157,8 +1159,24 @@
   }
 
   async function toggleGlobalChatLock() {
-    isGlobalChatLocked = !isGlobalChatLocked;
+    const nextLocked = !isGlobalChatLocked;
+    const previousLocked = isGlobalChatLocked;
+
+    isGlobalChatLocked = nextLocked;
     updateGlobalChatLockButton();
+
+    const { error } = await supabaseClient
+      .from("rooms")
+      .update({ is_global_locked: nextLocked })
+      .eq("id", roomId);
+
+    if (error) {
+      isGlobalChatLocked = previousLocked;
+      updateGlobalChatLockButton();
+      showMessage(getFriendlyError(error));
+      return;
+    }
+
     await sendGlobalChatLockBroadcast(isGlobalChatLocked);
     showMessage(`전체 채팅을 ${isGlobalChatLocked ? "잠금" : "잠금 해제"}했습니다.`, "success");
   }
