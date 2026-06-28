@@ -335,7 +335,7 @@
     if (!selectedUserIds.length) {
       privateDescription.textContent = "참가자가 들어오면 개인 채팅을 시작할 수 있습니다.";
     } else {
-      privateDescription.textContent = "숫자 버튼으로 개인 채팅 상대를 바꾸고, 필요한 대화는 창으로 최대 3개까지 띄울 수 있습니다.";
+      privateDescription.textContent = "닉네임 버튼으로 개인 채팅 상대를 바꾸고, 필요한 대화는 창으로 최대 3개까지 띄울 수 있습니다.";
     }
 
     renderPrivateChatPanels();
@@ -343,7 +343,7 @@
 
   function selectParticipant(userId) {
     if (!selectedUserIds.includes(userId)) {
-      showMessage("개인 채팅 숫자 버튼에는 최대 8명까지만 표시됩니다.");
+      showMessage("개인 채팅 닉네임 버튼에는 최대 8명까지만 표시됩니다.");
       return;
     }
 
